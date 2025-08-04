@@ -1,0 +1,101 @@
+import random
+import uuid
+
+from django.shortcuts import render
+from rest_framework.permissions import AllowAny
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework import generics, status
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.response import Response
+from django.core.mail import EmailMultiAlternatives
+from .models import User, Profile
+from provider_auth import models as api_models
+from provider_auth import serializers as api_serializers
+from django.template.loader import render_to_string
+from django.conf import settings
+from decimal import Decimal
+from twilio.rest import Client
+from django.core.mail import send_mail
+from dotenv import load_dotenv
+import random
+import os
+
+load_dotenv()
+
+# Create your views here.
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = api_serializers.MyTokenObtainPairSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.user
+        # Issue tokens immediately
+        refresh = RefreshToken.for_user(user)
+        access = str(refresh.access_token)
+        # Create MFA code and send it
+        method = request.data.get('method', 'email')
+        code = str(random.randint(100000, 999999))
+        session_id = str(uuid.uuid4())
+        twilio_api_key = os.getenv('TWILIO_API_KEY')
+        twilio_secret_key = os.getenv('TWILIO_SECRET_KEY')
+        api_models.Verification_Code.objects.create(user=user, code=code, method=method, session_id=session_id)
+        # Send code via email or SMS
+        phone_number = '+15022633992'
+        if method == 'sms':
+            client = Client(twilio_api_key, twilio_secret_key)
+            client.verify.v2.services(settings.TWILIO_VERIFY_SERVICE_SID).verifications.create(
+                to=phone_number,
+                channel='sms'
+            )
+        elif method == 'email':
+            send_mail(
+                subject='Login Verification Code',
+                message=f'Your code is {code}',
+                from_email='noreply@example.com',
+                recipient_list=[user.email]
+            )
+        request.session['mfa'] = False  # Mark session as requiring MFA
+        return Response({
+            'access': str(access),
+            'refresh': str(refresh),
+            'mfa_required': True,
+            'session_id': session_id,
+            'detail': 'Verification code sent.'
+        }, status=status.HTTP_200_OK)
+
+class RegisterUser(generics.CreateAPIView):
+    queryset = User.objects.all()
+    permission_classes = [AllowAny]
+    serializer_class = api_serializers.RegisterSerializer
+
+        
+class VerifyCodeView(generics.CreateAPIView):
+    serializer_class = api_serializers.VerifyCodeSerializer
+    permission_classes = [AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        # Require JWT authentication
+        user = request.user
+        session_id = request.data.get('session_id')
+        code = request.data.get('code')
+        twilio_api_key = os.getenv('TWILIO_API_KEY')
+        twilio_secret_key = os.getenv('TWILIO_SECRET_KEY')
+        if not user or not session_id or not code:
+            return Response({'error': 'Missing data'}, status=status.HTTP_400_BAD_REQUEST)
+        # Check code
+        valid_code = api_models.Verification_Code.objects.filter(
+            session_id=session_id,
+        ).order_by('-created_at').first()
+        if not valid_code:
+            return Response({'verified': False, 'error': 'Invalid code'}, status=status.HTTP_400_BAD_REQUEST)
+        # Mark user as verified
+        phone_number = '+15022633992'  # Replace with user's phone
+        client = Client(twilio_api_key, twilio_secret_key)
+        verification_check = client.verify.v2.services(settings.TWILIO_VERIFY_SERVICE_SID).verification_checks.create(
+        to=phone_number,
+        code=code)
+        if not verification_check.valid:
+            return Response({'verified': False, 'error': 'Invalid code'}, status=status.HTTP_400_BAD_REQUEST)
+        request.session['mfa'] = True  # Mark session as verified
+        return Response({'verified': True}, status=status.HTTP_200_OK)
