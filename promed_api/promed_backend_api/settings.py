@@ -24,6 +24,7 @@ ALLOWED_HOSTS = []
 USER_APPS = [
     'provider_auth.apps.ProviderAuthConfig',
     'onboarding_ops.apps.OnboardingOpsConfig',
+    'patients.apps.PatientsConfig',
 ]
 
 THIRD_PARTY_APPS = [
@@ -46,6 +47,8 @@ DJANGO_APPS = [
 ]
 
 INSTALLED_APPS = THIRD_PARTY_APPS + DJANGO_APPS + USER_APPS
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",

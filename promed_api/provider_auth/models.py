@@ -79,4 +79,3 @@ class Verification_Code(models.Model):
         
 
 
-

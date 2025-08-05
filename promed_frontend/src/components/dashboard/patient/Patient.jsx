@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useContext, useEffect } from "react";
+import { AuthContext } from "../../../utils/auth";
 import {
   Dialog,
   DialogTitle,
@@ -85,11 +86,11 @@ const PatientCard = ({ patient }) => (
       </div>
       
     </div>
-    <p className="text-sm text-gray-600">
+    {/* <p className="text-sm text-gray-600">
       Age: {patient.age} • Location: {patient.location}
-    </p>
+    </p> */}
 
-    <div className="text-sm text-gray-700">
+    {/* <div className="text-sm text-gray-700">
       <strong>Grafts Used:</strong>
       <ul className="list-disc list-inside ml-4 mt-1">
         {patient.grafts.map((g, i) => (
@@ -98,10 +99,17 @@ const PatientCard = ({ patient }) => (
           </li>
         ))}
       </ul>
-    </div>
+    </div> */}
 
     <div className="text-sm text-gray-700 space-y-1">
       <p>
+        <strong>First Name:</strong> {patient.first_name}
+      </p>
+      <p>
+        <strong>Last Name:</strong> {patient.last_name}
+      </p>
+    </div>
+      {/* <p>
         <strong>Tissue ID:</strong> {patient.tissueId}
       </p>
       <p>
@@ -119,7 +127,7 @@ const PatientCard = ({ patient }) => (
       <p>
         <strong>Estimated Profit:</strong> ${patient.estimatedProfit.toFixed(2)}
       </p>
-    </div>
+    </div> */}
 
     {/* {patient.woundImages?.length > 0 && (
       <div className="pt-3">
@@ -140,20 +148,63 @@ const PatientCard = ({ patient }) => (
 );
 
 const Patients = () => {
-  const [patients, setPatients] = useState(defaultPatients);
+   
+  const { getPatients } = useContext(AuthContext);
+  const { postPatient } = useContext(AuthContext);
+  const [patients, setPatients] = useState([]);
+
+  // Form Validation
+  const [errors, setErrors] = useState({}); 
+  const ValidateForm = () => {
+    const newErrors = {};
+    if (!formData.first_name.trim()) newErrors.first_name = "First name is required"; 
+    if (!formData.last_name.trim()) newErrors.last_name = "Last name is required"; 
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }
+  
+  // Fetch patients from backend
+  useEffect(() => {
+    const fetchPatients = async () => {
+      if (getPatients) {
+        
+        const result = await getPatients();
+        if (result.success) {
+          setPatients(result.data);
+        } else {
+          console.error("Failed to fetch patients:", result.error);
+        }
+      }
+    };
+    fetchPatients();
+  }, [getPatients]);
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
-    name: "",
-    age: "",
-    location: "",
+    first_name: "",
+    last_name: "",
+    middle_initial: "",
+    address: "",
+    city: "",
+    state: "",
+    zip_code: "",
+    phone_number: "",
+    primary_insurance: "",
+    secondary_insurance: "",
+    tertiary_insurance: "",
+    medical_record_number: "",
+    date_created: "",
+    date_updated: "",
+    // name: "",
+    // age: "",
+    // location: "",
     ivrStatus: "Pending",
-    grafts: "",
-    tissueId: "",
-    qCode: "",
-    date: "",
-    reimbursement: "",
-    invoiced: "",
-    estimatedProfit: "",
+    // grafts: "",
+    // tissueId: "",
+    // qCode: "",
+    // date: "",
+    // reimbursement: "",
+    // invoiced: "",
+    // estimatedProfit: "",
   });
 
   const handleInputChange = (e) => {
@@ -161,37 +212,66 @@ const Patients = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleAddPatient = () => {
-    const graftList = formData.grafts.split(",").map((g) => {
-      const [type, size] = g.trim().split(":");
-      return { type: type?.trim(), size: size?.trim() };
-    });
+  const handleAddPatient = async () => {
+    // Clear previous errors and Validate form
+    setErrors({});
+    if (!ValidateForm()) return;
+
+    // const graftList = formData.grafts.split(",").map((g) => {
+    //   const [type, size] = g.trim().split(":");
+    //   return { type: type?.trim(), size: size?.trim() };
+    // });
 
     const newPatient = {
       ...formData,
       id: Date.now(),
-      grafts: graftList,
-      age: parseInt(formData.age),
-      reimbursement: parseFloat(formData.reimbursement),
-      invoiced: parseFloat(formData.invoiced),
-      estimatedProfit: parseFloat(formData.estimatedProfit),
-      woundImages: [woundImage], // for demo, could use upload
+      // grafts: graftList,
+      // age: parseInt(formData.age),
+      // reimbursement: parseFloat(formData.reimbursement),
+      // invoiced: parseFloat(formData.invoiced),
+      // estimatedProfit: parseFloat(formData.estimatedProfit),
+      // woundImages: [woundImage], // for demo, could use upload
     };
+    
+     try {
+      // Call API to post new patient
+      const res = await postPatient(newPatient);
+      if (res.success) {
+        console.log("Patient added successfully:", res.data);
+        setPatients((prev) => [res.data, ...prev]);
+      }
+    } catch (error) {
+      console.error("Failed to add patient:", error);
+    }
 
-    setPatients((prev) => [newPatient, ...prev]);
+    // setPatients((prev) => [newPatient, ...prev]);
     setOpen(false);
     setFormData({
-      name: "",
-      age: "",
-      location: "",
+      first_name: "",
+      last_name: "",
+      middle_initial: "",
+      address: "",
+      city: "",
+      state: "",
+      zip_code: "",
+      phone_number: "",
+      primary_insurance: "",
+      secondary_insurance: "",
+      tertiary_insurance: "",
+      medical_record_number: "",
+      date_created: "",
+      date_updated: "",
+      // name: "",
+      // age: "",
+      // location: "",
       ivrStatus: "Pending",
-      grafts: "",
-      tissueId: "",
-      qCode: "",
-      date: "",
-      reimbursement: "",
-      invoiced: "",
-      estimatedProfit: "",
+      // grafts: "",
+      // tissueId: "",
+      // qCode: "",
+      // date: "",
+      // reimbursement: "",
+      // invoiced: "",
+      // estimatedProfit: "",
     });
   };
 
@@ -213,7 +293,7 @@ const Patients = () => {
         </button>
       </div>
 
-      <div className="space-y-6">
+       <div className="space-y-6">
         {sortedPatients.map((patient) => (
           <PatientCard key={patient.id} patient={patient} />
         ))}
@@ -230,6 +310,92 @@ const Patients = () => {
         <DialogContent dividers>
           <div className="space-y-4">
             <TextField
+              label="First Name"
+              name="first_name"
+              value={formData.first_name}
+              onChange={handleInputChange}
+              error={!!errors.first_name}
+              fullWidth
+            />
+            <TextField
+              label="Last Name"
+              name="last_name"
+              value={formData.last_name}
+              onChange={handleInputChange}
+              error={!!errors.last_name}
+              fullWidth
+            />
+            <TextField
+              label="Middle Initial"
+              name="middle_initial"
+              value={formData.middle_initial}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            <TextField
+              label="Address"
+              name="address"
+              value={formData.address}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            <TextField
+              label="City"
+              name="city"
+              value={formData.city}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            <TextField
+              label="State"
+              name="state"
+              value={formData.state}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            <TextField
+              label="Zip Code"
+              name="zip_code"
+              value={formData.zip_code}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            <TextField
+              label="Phone Number"
+              name="phone_number"
+              value={formData.phone_number}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            <TextField
+              label="Primary Insurance"
+              name="primary_insurance"
+              value={formData.primary_insurance}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            <TextField
+              label="Secondary Insurance"
+              name="secondary_insurance"
+              value={formData.secondary_insurance}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            <TextField
+              label="Tertiary Insurance"
+              name="tertiary_insurance"
+              value={formData.tertiary_insurance}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            <TextField
+              label="Medical Record Number"
+              name="medical_record_number"
+              value={formData.medical_record_number}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            {/* <TextField
               label="Name"
               name="name"
               value={formData.name}
@@ -250,7 +416,7 @@ const Patients = () => {
               value={formData.location}
               onChange={handleInputChange}
               fullWidth
-            />
+            /> */}
             <TextField
               select
               label="IVR Status"
@@ -265,7 +431,7 @@ const Patients = () => {
                 </MenuItem>
               ))}
             </TextField>
-            <TextField
+            {/* <TextField
               label="Grafts (type:size, comma separated)"
               name="grafts"
               value={formData.grafts}
@@ -315,8 +481,8 @@ const Patients = () => {
               type="number"
               value={formData.estimatedProfit}
               onChange={handleInputChange}
-              fullWidth
-            />
+              fullWidth */}
+            {/* /> */}
           </div>
         </DialogContent>
         <DialogActions>
