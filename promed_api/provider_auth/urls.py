@@ -7,5 +7,5 @@ urlpatterns = [
     path('provider/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('provider/register/', api_views.RegisterUser.as_view(), name='register'),
 #    path('send-code/', api_views.SendVerificationCodeView.as_view(), name='send-code'),
-    path('verify-code/', api_views.VerifyCodeView.as_view(), name='verify-code')
+    path('verify-code/', api_views.VerifyCodeView.as_view(), name='verify-code'),
 ]

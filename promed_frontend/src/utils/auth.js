@@ -125,6 +125,30 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+
+  const getPatients = async () => {
+  try {
+    const axiosInstance = axiosAuth();
+    const res = await axiosInstance.get(`${API_BASE_URL}/patient/patients/`);
+    return { success: true, data: res.data };
+  } catch (error) {
+    console.error("Failed to fetch patients:", error);
+    return { success: false, error: error.response?.data || error };
+  }
+};
+
+const postPatient = async (patientData) => {
+  try {
+    const axiosInstance = axiosAuth();
+    const res = await axiosInstance.post(`${API_BASE_URL}/patient/patients/`, patientData);
+    return { success: true, data: res.data };
+  } catch (error) {
+    console.error("Failed to add patient:", error);
+    return { success: false, error: error.response?.data || {}, message: error.response?.data?.detail|| error.message || "Failed to add patient" };
+  }
+};
+  
+
   const logout = () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
@@ -133,7 +157,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, register, sendVerificationToken, login, verifyCode, logout }}>
+    <AuthContext.Provider value={{ user, getPatients, postPatient, setUser, register, sendVerificationToken, login, verifyCode, logout }}>
       {children}
     </AuthContext.Provider>
   );
