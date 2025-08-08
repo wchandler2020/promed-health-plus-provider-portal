@@ -41,7 +41,7 @@ class MyTokenObtainPairView(TokenObtainPairView):
         twilio_secret_key = os.getenv('TWILIO_SECRET_KEY')
         api_models.Verification_Code.objects.create(user=user, code=code, method=method, session_id=session_id)
         # Send code via email or SMS
-        phone_number = '+13313021747'  # Replace with user's phone number
+        phone_number = '+15022633992'  # Replace with user's phone number
         if method == 'sms':
             client = Client(twilio_api_key, twilio_secret_key)
             client.verify.v2.services(settings.TWILIO_VERIFY_SERVICE_SID).verifications.create(
@@ -91,7 +91,7 @@ class VerifyCodeView(generics.CreateAPIView):
         if not valid_code:
             return Response({'verified': False, 'error': 'Invalid code'}, status=status.HTTP_400_BAD_REQUEST)
         # Mark user as verified
-        phone_number = '+13313021747'  # Replace with user's phone
+        phone_number = '+15022633992'  # Replace with user's phone
         client = Client(twilio_api_key, twilio_secret_key)
         verification_check = client.verify.v2.services(settings.TWILIO_VERIFY_SERVICE_SID).verification_checks.create(
         to=phone_number,

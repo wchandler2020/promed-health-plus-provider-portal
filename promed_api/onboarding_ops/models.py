@@ -1,12 +1,16 @@
 from django.db import models
 from django.conf import settings
 from provider_auth.models import User
+from patients.models import Patient
 
 def provider_upload_path(instance, filename):
     return f'providers/{instance.user.id}/{filename}'
 
 class ProviderForm(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='forms')
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='forms', null=True, blank=True)
+    form_type = models.CharField(max_length=100, blank=True, null=True)
+    completed = models.BooleanField(default=False)
     completed_form = models.FileField(upload_to=provider_upload_path, null=True, blank=True)
     form_data = models.JSONField(null=True, blank=True)  # For in-portal completed form
     date_created = models.DateTimeField(auto_now_add=True)
