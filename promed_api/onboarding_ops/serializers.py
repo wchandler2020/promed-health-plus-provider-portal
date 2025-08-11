@@ -58,16 +58,17 @@ class ProviderFormFillSerializer(serializers.Serializer):
 
         form_data = {
             'Provider Name': user.full_name,
-            'Text38': user.email,#patient address
+            'Text38': user.email,#patient email
             'Text56': patient.address,#patient address
-            'Text57': patient.phone_number,#patient address
+            'Text59': str(patient.date_of_birth),#patient address
+            'Text57': str(patient.phone_number),#patient phone number
             'Text62': patient.primary_insurance,#primary policy provider
             'Text63': patient.primary_insurance_number, #primary policy number
             'Text65': patient.secondary_insurance, #primary policy number
             'Text66': patient.secondary_insurance_number, #primary policy number
             'PATIENT ADDRESS': patient.address,
             'Text60': f'{patient.city}, {patient.state} {patient.zip_code}',
-            'PATIENT PHONE': patient.phone_number,
+            'PATIENT PHONE': str(patient.phone_number),
             'PATIENT FAX/EMAIL': patient.email,
         }
 

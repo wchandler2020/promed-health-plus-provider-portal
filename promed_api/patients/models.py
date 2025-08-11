@@ -1,5 +1,8 @@
 from django.db import models
 from django.conf import settings
+from phonenumber_field.modelfields import PhoneNumberField
+
+
 
 ivr_status_choices = (("Pending", "Pending"), ("Accepted", "Accepted"), ("Denied", "Denied"))
 
@@ -9,12 +12,13 @@ class Patient(models.Model):
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
     middle_initial = models.CharField(max_length=1, null=True, blank=True)
+    date_of_birth = models.DateField(blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
     address = models.CharField(max_length=255, null=True, blank=True)
     city = models.CharField(max_length=255, null=True, blank=True)
     state = models.CharField(max_length=255, null=True, blank=True)
     zip_code = models.CharField(max_length=20, null=True, blank=True)
-    phone_number = models.CharField(max_length=20, null=True, blank=True)
+    phone_number = PhoneNumberField(max_length=20, null=True, blank=True)
     primary_insurance = models.CharField(max_length=255, null=True, blank=True)
     primary_insurance_number = models.CharField(max_length=50, null=True, blank=True)
     secondary_insurance = models.CharField(max_length=255, null=True, blank=True)

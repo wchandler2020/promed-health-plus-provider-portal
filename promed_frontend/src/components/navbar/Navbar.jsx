@@ -33,7 +33,7 @@ const CloseMenuIconSVG = () => (
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticate] = useState(true);
+  const [isAuthenticated, setIsAuthenticate] = useState(false);
   const [notificationCount, setNotificationCount] = useState(2);
   const [notifications] = useState([
     { id: 1, text: "New appointment request" },
@@ -58,7 +58,6 @@ const Navbar = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Close notification dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -126,13 +125,9 @@ const Navbar = () => {
           </li>
         </ul>
 
-        {isAuthenticated && (
+        {isAuthenticated ? (
           <div className="hidden lg:flex items-center space-x-4">
-            {/* Notification Dropdown */}
-            <div
-              className="relative notification-container"
-              ref={notificationRef}
-            >
+            <div className="relative notification-container" ref={notificationRef}>
               <IoIosNotificationsOutline
                 className="text-2xl text-gray-600 cursor-pointer"
                 onClick={() => setShowDropdown((prev) => !prev)}
@@ -160,7 +155,6 @@ const Navbar = () => {
                 </div>
               )}
             </div>
-
             <h6 className="text-sm font-medium text-gray-800">
               Dr. Kara Johnson
             </h6>
@@ -169,6 +163,19 @@ const Navbar = () => {
               alt="User Profile"
               className="w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm"
             />
+          </div>
+        ) : (
+          <div className="hidden lg:flex items-center space-x-4">
+            <Link to="/login">
+              <button className="px-4 py-2 text-sm tracking-wide text-white transition-colors duration-200 transform bg-emerald-500 rounded-md hover:bg-emerald-400 focus:outline-none focus:bg-emerald-500 focus:ring focus:ring-emerald-500 focus:ring-opacity-50">
+                Provider Login
+              </button>
+            </Link>
+            <Link to="/register">
+              <button className="px-4 py-2 text-sm tracking-wide text-emerald-500 border border-emerald-500 rounded-md transition-colors duration-200 hover:bg-emerald-100 focus:outline-none focus:ring focus:ring-emerald-500 focus:ring-opacity-50">
+                Provider Registration
+              </button>
+            </Link>
           </div>
         )}
       </nav>
@@ -232,7 +239,7 @@ const Navbar = () => {
           </ul>
 
           <div className="mt-auto pt-6 flex flex-col">
-            {isAuthenticated && (
+            {isAuthenticated ? (
               <div className="flex items-center space-x-4 justify-between">
                 <div className="relative">
                   <IoIosNotificationsOutline className="text-2xl text-gray-600 cursor-pointer" />
@@ -253,7 +260,21 @@ const Navbar = () => {
                   />
                 </div>
               </div>
+            ) : (
+              <div className="flex flex-col space-y-4">
+                <Link to="/login">
+                  <button className="w-full px-4 py-2 text-sm tracking-wide text-white transition-colors duration-200 transform bg-emerald-500 rounded-md hover:bg-emerald-400 focus:outline-none focus:bg-emerald-500 focus:ring focus:ring-emerald-500 focus:ring-opacity-50">
+                    Provider Login
+                  </button>
+                </Link>
+                <Link to="/register">
+                  <button className="w-full px-4 py-2 text-sm tracking-wide text-emerald-500 border border-emerald-500 rounded-md transition-colors duration-200 hover:bg-emerald-100 focus:outline-none focus:ring focus:ring-emerald-500 focus:ring-opacity-50">
+                    Provider Register
+                  </button>
+                </Link>
+              </div>
             )}
+
             <p className="my-4 text-xs text-center text-gray-400">
               ProMed Health Plus &copy; {new Date().getFullYear()}
             </p>

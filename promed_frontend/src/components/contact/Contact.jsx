@@ -2,7 +2,7 @@ import React from "react";
 
 const Contact = () => {
   return (
-    <div className="mt-10 px-4 sm:px-6 lg:px-20 max-w-6xl mx-auto space-y-20">
+    <div className="mt-10 mb-20 px-4 sm:px-6 lg:px-20 max-w-6xl mx-auto space-y-20">
       {/* Contact Form */}
       <div className="grid md:grid-cols-2 gap-12 bg-white p-8 shadow-lg rounded-lg">
         <div className="space-y-8">

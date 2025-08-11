@@ -10,6 +10,8 @@ import Services from './components/services/Services';
 import Contact from './components/contact/Contact';
 import MFA from './components/MFA/MFA';
 import PrivateRoute from './utils/privateRoutes';
+import FillablePdf from './components/dashboard/documemts/FillablePdf';
+import Home from './components/home/Home';
 
 function AppWrapper() {
   const location = useLocation();
@@ -22,8 +24,10 @@ function AppWrapper() {
       <Toaster />
       {!shouldHideNavbar && <Navbar />}
       <Routes>
+        <Route path='/' element={<Home />} />
         <Route path='/register' element={<Register />} />
         <Route path='/dashboard' element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+        {/* <Route path='/fillable-pdf' element={<PrivateRoute><FillablePdf /></PrivateRoute>} /> */}
         <Route path='/login' element={<Login />} />
         <Route path='/mfa' element={<MFA />} />
         <Route path='/about' element={<About />} />

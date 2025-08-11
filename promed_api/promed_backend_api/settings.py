@@ -27,6 +27,7 @@ THIRD_PARTY_APPS = [
     'anymail',
     'drf_yasg',
     'storages',
+    'phonenumber_field'
 ]
 
 DJANGO_APPS = [

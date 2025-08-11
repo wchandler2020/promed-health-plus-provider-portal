@@ -10,56 +10,11 @@ import {
   MenuItem,
 } from "@mui/material";
 
-// Sample image for demo purposes
-import woundImage from "../../../assets/images/default_item.png"; // Replace with actual image(s)
-
-const defaultPatients = [
-  {
-    id: 1,
-    name: "John Doe",
-    age: 57,
-    location: "Los Angeles, CA",
-    ivrStatus: "Approved",
-    grafts: [{ type: "Dermal", size: "2cm x 4cm" }],
-    tissueId: "TX-123456",
-    qCode: "Q1234",
-    date: "2025-07-10",
-    reimbursement: 1200,
-    invoiced: 950,
-    estimatedProfit: 250,
-    woundImages: [woundImage, woundImage, woundImage, woundImage, ],
-  },
-  {
-    id: 2,
-    name: "Sarah Smith",
-    age: 62,
-    location: "Dallas, TX",
-    ivrStatus: "Denied",
-    grafts: [{ type: "Amniotic", size: "1cm x 2cm" }],
-    tissueId: "TX-987654",
-    qCode: "Q4321",
-    date: "2025-06-15",
-    reimbursement: 0,
-    invoiced: 700,
-    estimatedProfit: -700,
-    woundImages: [],
-  },
-  {
-    id: 3,
-    name: "Tammy Weddle",
-    age: 51,
-    location: "Louisville, KY",
-    ivrStatus: "Approved",
-    grafts: [{ type: "Amniotic", size: "1cm x 2cm" }],
-    tissueId: "KY-987654",
-    qCode: "Q4321",
-    date: "2025-07-01",
-    reimbursement: 0,
-    invoiced: 700,
-    estimatedProfit: -700,
-    woundImages: [],
-  },
-];
+import { format } from "date-fns";
+import { formatPhoneNumber } from "react-phone-number-input";
+import { FaEye, FaEdit, FaTrashAlt } from "react-icons/fa";
+import { FaSearch } from "react-icons/fa";
+import FillablePdf from "../documemts/FillablePdf";
 
 const IVRStatusBadge = ({ status }) => {
   const colors = {
@@ -67,6 +22,7 @@ const IVRStatusBadge = ({ status }) => {
     Pending: "bg-yellow-100 text-yellow-700",
     Denied: "bg-red-100 text-red-700",
   };
+
   return (
     <span
       className={`px-2 py-1 text-xs font-semibold rounded ${colors[status]}`}
@@ -76,98 +32,221 @@ const IVRStatusBadge = ({ status }) => {
   );
 };
 
-const PatientCard = ({ patient }) => (
-  <div className="border p-4 rounded-lg border border-gray-200 bg-gray-50 shadow-sm space-y-2">
-    <div className="flex justify-between items-center">
-      <h3 className="text-lg font-semibold">{patient.name}</h3>
-      <div>
-        <strong className="text-xs">IVR Status: </strong>
-        <IVRStatusBadge status={patient.ivrStatus} />
-      </div>
-      
-    </div>
-    {/* <p className="text-sm text-gray-600">
-      Age: {patient.age} • Location: {patient.location}
-    </p> */}
+const PatientCard = ({ patient, onViewPdf }) => {
+  // CORRECTED: Move formattedDate inside the component
+  const formattedDate = patient.date_of_birth
+    ? format(new Date(patient.date_of_birth), "M/d/yyyy")
+    : "N/A";
 
-    {/* <div className="text-sm text-gray-700">
-      <strong>Grafts Used:</strong>
-      <ul className="list-disc list-inside ml-4 mt-1">
-        {patient.grafts.map((g, i) => (
-          <li key={i}>
-            {g.type} — {g.size}
-          </li>
-        ))}
-      </ul>
-    </div> */}
+  const formattedPhoneNumber = patient.phone_number
+    ? formatPhoneNumber(patient.phone_number) || patient.phone_number
+    : "N/A";
 
-    <div className="text-sm text-gray-700 space-y-1">
-      <p>
-        <strong>First Name:</strong> {patient.first_name}
-      </p>
-      <p>
-        <strong>Last Name:</strong> {patient.last_name}
-      </p>
-    </div>
-      {/* <p>
-        <strong>Tissue ID:</strong> {patient.tissueId}
-      </p>
-      <p>
-        <strong>Q-Code:</strong> {patient.qCode}
-      </p>
-      <p>
-        <strong>Date of Application:</strong> {patient.date}
-      </p>
-      <p>
-        <strong>Reimbursement:</strong> ${patient.reimbursement.toFixed(2)}
-      </p>
-      <p>
-        <strong>Invoiced:</strong> ${patient.invoiced.toFixed(2)}
-      </p>
-      <p>
-        <strong>Estimated Profit:</strong> ${patient.estimatedProfit.toFixed(2)}
-      </p>
-    </div> */}
+  const calculateAge = (dobString) => {
+    // Check for a valid date string format.
+    if (!dobString || !/^\d{4}-\d{2}-\d{2}$/.test(dobString)) {
+      console.error("Invalid date of birth format. Please use 'YYYY-MM-DD'.");
+      return null;
+    }
 
-    {/* {patient.woundImages?.length > 0 && (
-      <div className="pt-3">
-        <p className="text-sm font-medium text-gray-700">Wound Assessment Images:</p>
-        <div className="flex flex-wrap gap-3 mt-2">
-          {patient.woundImages.map((img, idx) => (
-            <img
-              key={idx}
-              src={img}
-              alt="Wound"
-              className="w-24 h-24 rounded border object-cover"
-            />
-          ))}
+    // Create Date objects for the date of birth and the current date.
+    const dob = new Date(dobString);
+    const now = new Date();
+
+    // Calculate the difference in years.
+    let age = now.getFullYear() - dob.getFullYear();
+
+    // Adjust age if the birthday hasn't occurred yet this year.
+    // This is a crucial step for accuracy.
+    const monthDifference = now.getMonth() - dob.getMonth();
+    const dayDifference = now.getDate() - dob.getDate();
+
+    if (monthDifference < 0 || (monthDifference === 0 && dayDifference < 0)) {
+      age--;
+    }
+
+    return age;
+  };
+
+  return (
+    <div className="border p-4 rounded-lg border border-gray-200 bg-gray-50 shadow-sm space-y-2">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold">{patient.name}</h3>
+        <div className="flex items-center justify-between w-full">
+          <p className="text-sm">
+            <strong>Patient Name:</strong> {patient.first_name}{" "}
+            {patient.last_name}, {patient.middle_initial}.
+          </p>
+          <strong className="text-sm">
+            IVR Status: <IVRStatusBadge status={patient.ivrStatus} />
+          </strong>
         </div>
       </div>
-    )} */}
-  </div>
-);
+      <div
+        className="text-xs text-gray-700 space-y-1"
+        style={{ marginTop: -4 }}
+      >
+        <p className="text-xs flex" style={{ fontSize: 10 }}>
+          <strong className="mr-1">Medical Record #:</strong>{" "}
+          {patient.medical_record_number}
+        </p>
+      </div>
+      <div className="text-sm text-gray-700 space-y-1" style={{ marginTop: 8 }}>
+        <p className="text-xs flex">
+          <strong className="mr-1">Address:</strong> {patient.address}{" "}
+          {patient.city}, {patient.state} {patient.zip_code}
+        </p>
+      </div>
+      <div
+        className="text-sm text-gray-700 space-y-1"
+        style={{ marginTop: -0.5 }}
+      >
+        <p className="text-xs flex">
+          <strong className="mr-1">Phone Number:</strong> {formattedPhoneNumber}
+        </p>
+      </div>
+      <div
+        className="text-sm text-gray-700 space-y-1"
+        style={{ marginTop: -0.5 }}
+      >
+        <p className="text-xs flex">
+          <strong className="mr-1">Date of Birth:</strong> {formattedDate}
+        </p>
+      </div>
+      <div
+        className="text-sm text-gray-700 space-y-1"
+        style={{ marginTop: -0.5 }}
+      >
+        <p className="text-xs flex">
+          <strong className="mr-1">Age :</strong>{" "}
+          {calculateAge(patient.date_of_birth)}
+        </p>
+      </div>
+      <div
+        className="h-[2px] w-[90%] bg-gray-200 flex m-auto opacity-550"
+        style={{ marginTop: 25 }}
+      ></div>
+      <p className="text-sm font-semibold text-center">Insurance Information</p>
+      <div className="text-sm text-gray-700 space-y-1" style={{ marginTop: 5 }}>
+        <p className="text-xs flex">
+          <strong className="mr-1">Primary Insurance Provider :</strong>{" "}
+          {patient.primary_insurance}
+        </p>
+      </div>
+      <div
+        className="text-sm text-gray-700 space-y-1"
+        style={{ marginTop: -0.5 }}
+      >
+        <p className="text-xs flex">
+          <strong className="mr-1">Primary Insurance Number :</strong>{" "}
+          {patient.primary_insurance_number}
+        </p>
+      </div>
+      <div className="text-sm text-gray-700 space-y-1" style={{ marginTop: 3 }}>
+        <p className="text-xs flex">
+          <strong className="mr-1">Secondary Insurance Provider:</strong>{" "}
+          {patient.secondary_insurance ? patient.secondary_insurance : "N/A"}
+        </p>
+      </div>
+      <div
+        className="text-sm text-gray-700 space-y-1"
+        style={{ marginTop: -0.5 }}
+      >
+        <p className="text-xs flex">
+          <strong className="mr-1">Secondary Insurance Number:</strong>{" "}
+          {patient.secondary_insurance_number
+            ? patient.secondary_insurance_number
+            : "N/A"}
+        </p>
+      </div>
+      <div className="text-sm text-gray-700 space-y-1" style={{ marginTop: 3 }}>
+        <p className="text-xs flex">
+          <strong className="mr-1">Secondary Insurance Provider:</strong>{" "}
+          {patient.tertiary_insurance ? patient.tertiary_insurance : "N/A"}
+        </p>
+      </div>
+      <div
+        className="text-sm text-gray-700 space-y-1"
+        style={{ marginTop: -0.5 }}
+      >
+        <p className="text-xs flex">
+          <strong className="mr-1">Secondary Insurance Number:</strong>{" "}
+          {patient.tertiary_insurance_number
+            ? patient.tertiary_insurance_number
+            : "N/A"}
+        </p>
+      </div>
+      <div
+        className="h-[2px] w-[90%] bg-gray-200 flex m-auto opacity-550"
+        style={{ marginTop: 25 }}
+      ></div>
+      <p className="text-sm font-semibold text-center">Patient Documentation</p>
+
+      <div className="text-sm text-gray-700 space-y-1" style={{ marginTop: 5 }}>
+        <div className="flex items-center justify-between">
+          <p className="text-xs flex">
+            <strong>Promed Healthcare Plus IVR</strong>
+          </p>
+          <div className="flex space-x-2">
+            <FaEye
+              className="text-gray-500 hover:text-blue-500 cursor-pointer"
+              onClick={() => onViewPdf(patient)}
+            />
+            <FaEdit className="text-gray-500 hover:text-green-500 cursor-pointer" />
+            <FaTrashAlt className="text-gray-500 hover:text-red-500 cursor-pointer" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Patients = () => {
-   
-  const { getPatients } = useContext(AuthContext);
-  const { postPatient } = useContext(AuthContext);
+  const { getPatients, postPatient } = useContext(AuthContext);
   const [patients, setPatients] = useState([]);
+  const [errors, setErrors] = useState({});
+  const [open, setOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [viewPdfModalOpen, setViewPdfModalOpen] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState(null);
 
-  // Form Validation
-  const [errors, setErrors] = useState({}); 
+  // CORRECTED: Add date_of_birth field to initial state
+  const [formData, setFormData] = useState({
+    first_name: "",
+    last_name: "",
+    middle_initial: "",
+    date_of_birth: "", // New field
+    email: "",
+    address: "",
+    city: "",
+    state: "",
+    zip_code: "",
+    phone_number: "",
+    primary_insurance: "",
+    primary_insurance_number: "",
+    secondary_insurance: "",
+    secondary_insurance_number: "",
+    tertiary_insurance: "",
+    tertiary_insurance_number: "",
+    medical_record_number: "",
+    ivrStatus: "Pending",
+    date_created: "",
+    date_updated: "",
+  });
+
   const ValidateForm = () => {
     const newErrors = {};
-    if (!formData.first_name.trim()) newErrors.first_name = "First name is required"; 
-    if (!formData.last_name.trim()) newErrors.last_name = "Last name is required"; 
+    if (!formData.first_name.trim())
+      newErrors.first_name = "First name is required";
+    if (!formData.last_name.trim())
+      newErrors.last_name = "Last name is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }
-  
-  // Fetch patients from backend
+  };
+
   useEffect(() => {
     const fetchPatients = async () => {
       if (getPatients) {
-        
         const result = await getPatients();
         if (result.success) {
           setPatients(result.data);
@@ -178,34 +257,6 @@ const Patients = () => {
     };
     fetchPatients();
   }, [getPatients]);
-  const [open, setOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    first_name: "",
-    last_name: "",
-    middle_initial: "",
-    address: "",
-    city: "",
-    state: "",
-    zip_code: "",
-    phone_number: "",
-    primary_insurance: "",
-    secondary_insurance: "",
-    tertiary_insurance: "",
-    medical_record_number: "",
-    date_created: "",
-    date_updated: "",
-    // name: "",
-    // age: "",
-    // location: "",
-    ivrStatus: "Pending",
-    // grafts: "",
-    // tissueId: "",
-    // qCode: "",
-    // date: "",
-    // reimbursement: "",
-    // invoiced: "",
-    // estimatedProfit: "",
-  });
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -213,28 +264,11 @@ const Patients = () => {
   };
 
   const handleAddPatient = async () => {
-    // Clear previous errors and Validate form
     setErrors({});
     if (!ValidateForm()) return;
 
-    // const graftList = formData.grafts.split(",").map((g) => {
-    //   const [type, size] = g.trim().split(":");
-    //   return { type: type?.trim(), size: size?.trim() };
-    // });
-
-    const newPatient = {
-      ...formData,
-      id: Date.now(),
-      // grafts: graftList,
-      // age: parseInt(formData.age),
-      // reimbursement: parseFloat(formData.reimbursement),
-      // invoiced: parseFloat(formData.invoiced),
-      // estimatedProfit: parseFloat(formData.estimatedProfit),
-      // woundImages: [woundImage], // for demo, could use upload
-    };
-    
-     try {
-      // Call API to post new patient
+    const newPatient = { ...formData };
+    try {
       const res = await postPatient(newPatient);
       if (res.success) {
         console.log("Patient added successfully:", res.data);
@@ -244,62 +278,83 @@ const Patients = () => {
       console.error("Failed to add patient:", error);
     }
 
-    // setPatients((prev) => [newPatient, ...prev]);
     setOpen(false);
     setFormData({
       first_name: "",
       last_name: "",
       middle_initial: "",
+      date_of_birth: "", // Reset this field
+      email: "",
       address: "",
       city: "",
       state: "",
       zip_code: "",
       phone_number: "",
       primary_insurance: "",
+      primary_insurance_number: "",
       secondary_insurance: "",
+      secondary_insurance_number: "",
       tertiary_insurance: "",
+      tertiary_insurance_number: "",
       medical_record_number: "",
-      date_created: "",
-      date_updated: "",
-      // name: "",
-      // age: "",
-      // location: "",
       ivrStatus: "Pending",
-      // grafts: "",
-      // tissueId: "",
-      // qCode: "",
-      // date: "",
-      // reimbursement: "",
-      // invoiced: "",
-      // estimatedProfit: "",
     });
   };
 
-  // Sort patients: active first
-  const sortedPatients = [...patients].sort((a, b) => {
+  const filteredPatients = patients.filter((patient) => {
+    const fullName =
+      `${patient.first_name} ${patient.last_name} ${patient.middle_initial}`.toLowerCase();
+    const medRecord = patient.medical_record_number?.toLowerCase() || "";
+    return (
+      fullName.includes(searchTerm.toLowerCase()) ||
+      medRecord.includes(searchTerm.toLowerCase())
+    );
+  });
+
+  const sortedPatients = [...filteredPatients].sort((a, b) => {
     const active = (status) => ["Approved", "Pending"].includes(status);
     return active(b.ivrStatus) - active(a.ivrStatus);
   });
+
+  const handleViewPdf = (patient) => {
+    setSelectedPatient(patient);
+    setViewPdfModalOpen(true);
+  };
 
   return (
     <div className="max-w-5xl mx-auto mt-10 p-6 bg-white shadow-lg rounded">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-semibold">Patient Applications</h2>
         <button
-          className="border border-emerald-500 text-emerald-500 hover:bg-emerald-500 hover:text-white px-4 py-2 rounded-md transition-all sm:text-base text-sm"
+          className="border border-emerald-500 text-emerald-500 hover:bg-emerald-500 hover:text-white px-4 py-2 rounded-md transition-all sm:text-sm text-xs"
           onClick={() => setOpen(true)}
         >
           + New Patient
         </button>
       </div>
+      <div className="relative flex items-center w-full max-w-md mb-5">
+        <input
+          type="text"
+          placeholder="Search Patients by Name or Med Record No."
+          className="w-full px-2 py-1 pl-10 text-gray-700 bg-white border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 text-sm"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <div className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+          <FaSearch />
+        </div>
+      </div>
 
-       <div className="space-y-6">
+      <div className="space-y-6">
         {sortedPatients.map((patient) => (
-          <PatientCard key={patient.id} patient={patient} />
+          <PatientCard
+            key={patient.id}
+            patient={patient}
+            onViewPdf={handleViewPdf}
+          />
         ))}
       </div>
 
-      {/* Modal */}
       <Dialog
         open={open}
         onClose={() => setOpen(false)}
@@ -330,6 +385,16 @@ const Patients = () => {
               name="middle_initial"
               value={formData.middle_initial}
               onChange={handleInputChange}
+              fullWidth
+            />
+            {/* CORRECTED: Add Date of Birth field */}
+            <TextField
+              type="date"
+              label="Date of Birth"
+              name="date_of_birth"
+              value={formData.date_of_birth}
+              onChange={handleInputChange}
+              InputLabelProps={{ shrink: true }}
               fullWidth
             />
             <TextField
@@ -375,9 +440,23 @@ const Patients = () => {
               fullWidth
             />
             <TextField
+              label="Primary Insurance Number"
+              name="primary_insurance_number"
+              value={formData.primary_insurance_number}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            <TextField
               label="Secondary Insurance"
               name="secondary_insurance"
               value={formData.secondary_insurance}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            <TextField
+              label="Secondary Insurance Number"
+              name="secondary_insurance_number"
+              value={formData.secondary_insurance_number}
               onChange={handleInputChange}
               fullWidth
             />
@@ -389,34 +468,19 @@ const Patients = () => {
               fullWidth
             />
             <TextField
+              label="Tertiary Insurance Number"
+              name="tertiary_insurance_number"
+              value={formData.tertiary_insurance_number}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            <TextField
               label="Medical Record Number"
               name="medical_record_number"
               value={formData.medical_record_number}
               onChange={handleInputChange}
               fullWidth
             />
-            {/* <TextField
-              label="Name"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              fullWidth
-            />
-            <TextField
-              label="Age"
-              name="age"
-              type="number"
-              value={formData.age}
-              onChange={handleInputChange}
-              fullWidth
-            />
-            <TextField
-              label="Location"
-              name="location"
-              value={formData.location}
-              onChange={handleInputChange}
-              fullWidth
-            /> */}
             <TextField
               select
               label="IVR Status"
@@ -431,58 +495,6 @@ const Patients = () => {
                 </MenuItem>
               ))}
             </TextField>
-            {/* <TextField
-              label="Grafts (type:size, comma separated)"
-              name="grafts"
-              value={formData.grafts}
-              onChange={handleInputChange}
-              fullWidth
-            />
-            <TextField
-              label="Tissue ID"
-              name="tissueId"
-              value={formData.tissueId}
-              onChange={handleInputChange}
-              fullWidth
-            />
-            <TextField
-              label="Q-Code"
-              name="qCode"
-              value={formData.qCode}
-              onChange={handleInputChange}
-              fullWidth
-            />
-            <TextField
-              type="date"
-              name="date"
-              value={formData.date}
-              onChange={handleInputChange}
-              fullWidth
-            />
-            <TextField
-              label="Reimbursement"
-              name="reimbursement"
-              type="number"
-              value={formData.reimbursement}
-              onChange={handleInputChange}
-              fullWidth
-            />
-            <TextField
-              label="Invoiced"
-              name="invoiced"
-              type="number"
-              value={formData.invoiced}
-              onChange={handleInputChange}
-              fullWidth
-            />
-            <TextField
-              label="Estimated Profit"
-              name="estimatedProfit"
-              type="number"
-              value={formData.estimatedProfit}
-              onChange={handleInputChange}
-              fullWidth */}
-            {/* /> */}
           </div>
         </DialogContent>
         <DialogActions>
@@ -493,6 +505,28 @@ const Patients = () => {
             color="primary"
           >
             Add Patient
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={viewPdfModalOpen}
+        onClose={() => setViewPdfModalOpen(false)}
+        maxWidth="lg"
+        fullWidth
+      >
+        <DialogTitle>📄 View IVR Form</DialogTitle>
+        <DialogContent dividers>
+          {selectedPatient && (
+            <FillablePdf
+              selectedPatientId={selectedPatient.id}
+              formType="IVR_FORM"
+              hidePatientSelect={true}
+            />
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setViewPdfModalOpen(false)} color="primary">
+            Close
           </Button>
         </DialogActions>
       </Dialog>

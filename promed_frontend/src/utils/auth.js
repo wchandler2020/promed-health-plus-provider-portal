@@ -125,7 +125,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-
   const getPatients = async () => {
   try {
     const axiosInstance = axiosAuth();
