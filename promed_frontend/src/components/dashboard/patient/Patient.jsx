@@ -17,6 +17,7 @@ import { formatPhoneNumber } from "react-phone-number-input";
 import { FaEye, FaEdit, FaTrashAlt } from "react-icons/fa";
 import { FaSearch } from "react-icons/fa";
 import FillablePdf from "../documemts/FillablePdf";
+import Notes from "../documemts/Notes";
 
 const IVRStatusBadge = ({ status }) => {
   const colors = {
@@ -183,7 +184,7 @@ const PatientCard = ({ patient, onViewPdf }) => {
         style={{ marginTop: 25 }}
       ></div>
       <p className="text-sm font-semibold text-center">Patient Documentation</p>
-
+      
       <div className="text-sm text-gray-700 space-y-1" style={{ marginTop: 5 }}>
         <div className="flex items-center justify-between">
           <p className="text-xs flex">
@@ -199,6 +200,11 @@ const PatientCard = ({ patient, onViewPdf }) => {
           </div>
         </div>
       </div>
+      <div
+        className="h-[2px] w-[90%] bg-gray-200 flex m-auto opacity-550"
+        style={{ marginTop: 25 }}
+      ></div>
+      <Notes key={patient.id}patientId={patient.id} />
     </div>
   );
 };
@@ -242,6 +248,8 @@ const Patients = () => {
       newErrors.first_name = "First name is required";
     if (!formData.last_name.trim())
       newErrors.last_name = "Last name is required";
+    if (!formData.date_of_birth)
+      newErrors.date_of_birth = "Date of birth is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -357,252 +365,146 @@ const Patients = () => {
         ))}
       </div>
 
-      <Modal open={open} onClose={() => setOpen(false)}>
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: "100%",
-            maxWidth: 600,
-            bgcolor: "transparent",
-            boxShadow: "none",
-            outline: "none",
-          }}
-        >
-          <div className="bg-white rounded-2xl shadow-2xl p-8 mx-4 border border-gray-100 relative">
-            {/* Close Button */}
-            <button
-              onClick={() => setOpen(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 transition"
-              aria-label="Close"
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>➕ Add New Patient</DialogTitle>
+        <DialogContent dividers>
+          <div className="space-y-4">
+            <TextField
+              label="First Name"
+              name="first_name"
+              value={formData.first_name}
+              onChange={handleInputChange}
+              error={!!errors.first_name}
+              fullWidth
+            />
+            <TextField
+              label="Last Name"
+              name="last_name"
+              value={formData.last_name}
+              onChange={handleInputChange}
+              error={!!errors.last_name}
+              fullWidth
+            />
+            <TextField
+              label="Middle Initial"
+              name="middle_initial"
+              value={formData.middle_initial}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            {/* CORRECTED: Add Date of Birth field */}
+            <TextField
+              type="date"
+              label="Date of Birth"
+              name="date_of_birth"
+              value={formData.date_of_birth}
+              onChange={handleInputChange}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+            />
+            <TextField
+              label="Address"
+              name="address"
+              value={formData.address}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            <TextField
+              label="City"
+              name="city"
+              value={formData.city}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            <TextField
+              label="State"
+              name="state"
+              value={formData.state}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            <TextField
+              label="Zip Code"
+              name="zip_code"
+              value={formData.zip_code}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            <TextField
+              label="Phone Number"
+              name="phone_number"
+              value={formData.phone_number}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            <TextField
+              label="Primary Insurance"
+              name="primary_insurance"
+              value={formData.primary_insurance}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            <TextField
+              label="Primary Insurance Number"
+              name="primary_insurance_number"
+              value={formData.primary_insurance_number}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            <TextField
+              label="Secondary Insurance"
+              name="secondary_insurance"
+              value={formData.secondary_insurance}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            <TextField
+              label="Secondary Insurance Number"
+              name="secondary_insurance_number"
+              value={formData.secondary_insurance_number}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            <TextField
+              label="Tertiary Insurance"
+              name="tertiary_insurance"
+              value={formData.tertiary_insurance}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            <TextField
+              label="Tertiary Insurance Number"
+              name="tertiary_insurance_number"
+              value={formData.tertiary_insurance_number}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            <TextField
+              label="Medical Record Number"
+              name="medical_record_number"
+              value={formData.medical_record_number}
+              onChange={handleInputChange}
+              fullWidth
+            />
+            <TextField
+              select
+              label="IVR Status"
+              name="ivrStatus"
+              value={formData.ivrStatus}
+              onChange={handleInputChange}
+              fullWidth
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-
-            {/* Header */}
-            <h2 className="text-3xl font-bold text-center text-gray-800 mb-2">
-              Add New Patient
-            </h2>
-            <p className="text-center text-gray-500 mb-6">
-              Fill out the form below to register a new patient.
-            </p>
-
-            {/* Form */}
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleAddPatient();
-              }}
-              className="space-y-6 max-h-[70vh] overflow-y-auto pr-2"
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    First Name
-                  </label>
-                  <input
-                    type="text"
-                    name="first_name"
-                    value={formData.first_name}
-                    onChange={handleInputChange}
-                    required
-                    className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Last Name
-                  </label>
-                  <input
-                    type="text"
-                    name="last_name"
-                    value={formData.last_name}
-                    onChange={handleInputChange}
-                    required
-                    className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Middle Initial
-                  </label>
-                  <input
-                    type="text"
-                    name="middle_initial"
-                    value={formData.middle_initial}
-                    onChange={handleInputChange}
-                    className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Date of Birth
-                  </label>
-                  <input
-                    type="date"
-                    name="date_of_birth"
-                    value={formData.date_of_birth}
-                    onChange={handleInputChange}
-                    className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Address
-                </label>
-                <input
-                  type="text"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    City
-                  </label>
-                  <input
-                    type="text"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    State
-                  </label>
-                  <input
-                    type="text"
-                    name="state"
-                    value={formData.state}
-                    onChange={handleInputChange}
-                    className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Zip Code
-                </label>
-                <input
-                  type="text"
-                  name="zip_code"
-                  value={formData.zip_code}
-                  onChange={handleInputChange}
-                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Phone Number
-                </label>
-                <input
-                  type="text"
-                  name="phone_number"
-                  value={formData.phone_number}
-                  onChange={handleInputChange}
-                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Primary Insurance
-                  </label>
-                  <input
-                    type="text"
-                    name="primary_insurance"
-                    value={formData.primary_insurance}
-                    onChange={handleInputChange}
-                    className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Primary Insurance Number
-                  </label>
-                  <input
-                    type="text"
-                    name="primary_insurance_number"
-                    value={formData.primary_insurance_number}
-                    onChange={handleInputChange}
-                    className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Secondary Insurance
-                  </label>
-                  <input
-                    type="text"
-                    name="secondary_insurance"
-                    value={formData.secondary_insurance}
-                    onChange={handleInputChange}
-                    className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Secondary Insurance Number
-                  </label>
-                  <input
-                    type="text"
-                    name="secondary_insurance_number"
-                    value={formData.secondary_insurance_number}
-                    onChange={handleInputChange}
-                    className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-lg transition-colors duration-300"
-              >
-                Add Patient
-              </button>
-            </form>
+              {["Approved", "Pending", "Denied"].map((status) => (
+                <MenuItem key={status} value={status}>
+                  {status}
+                </MenuItem>
+              ))}
+            </TextField>
           </div>
         </Box>
       </Modal>
