@@ -15,6 +15,7 @@ import { formatPhoneNumber } from "react-phone-number-input";
 import { FaEye, FaEdit, FaTrashAlt } from "react-icons/fa";
 import { FaSearch } from "react-icons/fa";
 import FillablePdf from "../documemts/FillablePdf";
+import Notes from "../documemts/Notes";
 
 const IVRStatusBadge = ({ status }) => {
   const colors = {
@@ -197,6 +198,11 @@ const PatientCard = ({ patient, onViewPdf }) => {
           </div>
         </div>
       </div>
+      <div
+        className="h-[2px] w-[90%] bg-gray-200 flex m-auto opacity-550"
+        style={{ marginTop: 25 }}
+      ></div>
+        <Notes key={patient.id} patientId={patient.id}></Notes>
     </div>
   );
 };
