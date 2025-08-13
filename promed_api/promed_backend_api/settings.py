@@ -227,7 +227,7 @@ AWS_QUERYSTRING_AUTH = False # For more secure, clean URLs for public files, or 
 AWS_DEFAULT_ACL = None # Recommended: let bucket policies manage access. If you need public files, use 'public-read' (e.g., for user profile pics, but not for HIPAA data).
 AWS_S3_VERITY = True
 # Default File Storage (important!)
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 # If you also have static files on S3 (optional)
 STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'

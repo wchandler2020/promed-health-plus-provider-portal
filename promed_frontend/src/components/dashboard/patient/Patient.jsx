@@ -8,6 +8,8 @@ import {
   Button,
   TextField,
   MenuItem,
+  Box,
+  Modal,
 } from "@mui/material";
 
 import { format } from "date-fns";
@@ -182,7 +184,7 @@ const PatientCard = ({ patient, onViewPdf }) => {
         style={{ marginTop: 25 }}
       ></div>
       <p className="text-sm font-semibold text-center">Patient Documentation</p>
-
+      
       <div className="text-sm text-gray-700 space-y-1" style={{ marginTop: 5 }}>
         <div className="flex items-center justify-between">
           <p className="text-xs flex">
@@ -202,7 +204,7 @@ const PatientCard = ({ patient, onViewPdf }) => {
         className="h-[2px] w-[90%] bg-gray-200 flex m-auto opacity-550"
         style={{ marginTop: 25 }}
       ></div>
-        <Notes key={patient.id} patientId={patient.id}></Notes>
+      <Notes key={patient.id}patientId={patient.id} />
     </div>
   );
 };
@@ -246,6 +248,8 @@ const Patients = () => {
       newErrors.first_name = "First name is required";
     if (!formData.last_name.trim())
       newErrors.last_name = "Last name is required";
+    if (!formData.date_of_birth)
+      newErrors.date_of_birth = "Date of birth is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -502,18 +506,9 @@ const Patients = () => {
               ))}
             </TextField>
           </div>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpen(false)}>Cancel</Button>
-          <Button
-            onClick={handleAddPatient}
-            variant="contained"
-            color="primary"
-          >
-            Add Patient
-          </Button>
-        </DialogActions>
-      </Dialog>
+        </Box>
+      </Modal>
+
       <Dialog
         open={viewPdfModalOpen}
         onClose={() => setViewPdfModalOpen(false)}
