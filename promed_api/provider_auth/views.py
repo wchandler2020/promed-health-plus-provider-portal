@@ -4,7 +4,7 @@ import uuid
 from django.shortcuts import render
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework import generics, status
+from rest_framework import generics, status, permissions
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
 from django.core.mail import EmailMultiAlternatives
@@ -100,3 +100,21 @@ class VerifyCodeView(generics.CreateAPIView):
             return Response({'verified': False, 'error': 'Invalid code'}, status=status.HTTP_400_BAD_REQUEST)
         request.session['mfa'] = True  # Mark session as verified
         return Response({'verified': True}, status=status.HTTP_200_OK)
+
+class ProviderProfileView(generics.RetrieveAPIView):
+    serializer_class = api_serializers.ProfileSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_object(self):
+        return self.request.user.profile
+    
+    def put(self, request, *args, **kwargs):
+        profile = self.get.object()
+        serializer = self.serializer_class(profile, data=request.data, partial=True)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    

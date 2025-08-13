@@ -16,7 +16,8 @@ export const AuthProvider = ({ children }) => {
   const verifyToken = async (token) => {
     const axiosInstance = axiosAuth();
     try {
-      const response = await axiosInstance.get(`${API_BASE_URL}/me/`)
+      // const response = await axiosInstance.get(`${API_BASE_URL}/me/`)
+      const response = await axiosInstance.get(`${API_BASE_URL}/provider/profile/`)
   
       return { success: true, data: response.data };
     } catch (error) {
@@ -81,8 +82,8 @@ export const AuthProvider = ({ children }) => {
         };
       }
 
-      const { access, refresh } = response.data;
-      const userData = { email, verified: true };
+      const { access, refresh, user:userData } = response.data;
+      // const userData = { email, verified: true };
 
       localStorage.setItem('accessToken', access);
       localStorage.setItem('refreshToken', refresh);
@@ -156,7 +157,7 @@ const postPatient = async (patientData) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, getPatients, postPatient, setUser, register, sendVerificationToken, login, verifyCode, logout }}>
+    <AuthContext.Provider value={{ user, getPatients, postPatient, setUser, register, sendVerificationToken, login, verifyCode, logout, verifyToken, }}>
       {children}
     </AuthContext.Provider>
   );
