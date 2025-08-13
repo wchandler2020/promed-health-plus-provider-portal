@@ -17,6 +17,7 @@ USER_APPS = [
     'provider_auth.apps.ProviderAuthConfig',
     'onboarding_ops.apps.OnboardingOpsConfig',
     'patients.apps.PatientsConfig',
+    'notes.apps.NotesConfig',
 ]
 
 THIRD_PARTY_APPS = [

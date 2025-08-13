@@ -5,4 +5,3 @@ class NotesSerializers(serializers.ModelSerializer):
     class Meta:
         model = api_models.Notes
         fields = '__all__'
-        read_only_fields = ['user']

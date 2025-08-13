@@ -202,7 +202,7 @@ const PatientCard = ({ patient, onViewPdf }) => {
         className="h-[2px] w-[90%] bg-gray-200 flex m-auto opacity-550"
         style={{ marginTop: 25 }}
       ></div>
-      <Notes key={patient.id}patientId={patient.id} />
+      <Notes key={patient.id} patientId={patient.id} />
     </div>
   );
 };
