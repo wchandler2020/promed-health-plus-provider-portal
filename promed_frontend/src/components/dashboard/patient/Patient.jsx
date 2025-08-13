@@ -15,6 +15,7 @@ import { formatPhoneNumber } from "react-phone-number-input";
 import { FaEye, FaEdit, FaTrashAlt } from "react-icons/fa";
 import { FaSearch } from "react-icons/fa";
 import FillablePdf from "../documemts/FillablePdf";
+import Notes from "../documemts/Notes";
 
 const IVRStatusBadge = ({ status }) => {
   const colors = {
@@ -181,7 +182,7 @@ const PatientCard = ({ patient, onViewPdf }) => {
         style={{ marginTop: 25 }}
       ></div>
       <p className="text-sm font-semibold text-center">Patient Documentation</p>
-
+      
       <div className="text-sm text-gray-700 space-y-1" style={{ marginTop: 5 }}>
         <div className="flex items-center justify-between">
           <p className="text-xs flex">
@@ -197,6 +198,11 @@ const PatientCard = ({ patient, onViewPdf }) => {
           </div>
         </div>
       </div>
+      <div
+        className="h-[2px] w-[90%] bg-gray-200 flex m-auto opacity-550"
+        style={{ marginTop: 25 }}
+      ></div>
+      <Notes key={patient.id}patientId={patient.id} />
     </div>
   );
 };
@@ -240,6 +246,8 @@ const Patients = () => {
       newErrors.first_name = "First name is required";
     if (!formData.last_name.trim())
       newErrors.last_name = "Last name is required";
+    if (!formData.date_of_birth)
+      newErrors.date_of_birth = "Date of birth is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -395,6 +403,7 @@ const Patients = () => {
               value={formData.date_of_birth}
               onChange={handleInputChange}
               InputLabelProps={{ shrink: true }}
+              error={!!errors.date_of_birth}
               fullWidth
             />
             <TextField
