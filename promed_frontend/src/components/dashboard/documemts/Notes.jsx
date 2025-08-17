@@ -121,7 +121,7 @@ const Notes = ({ patientId }) => {
 
     return (
     <div>
-        <p className="text-sm font-semibold text-center">Patient Documentation</p>
+        <p className="text-sm font-semibold text-center">Patient Notes</p>
         <div className="text-sm text-gray-700 space-y-1" style={{ marginTop: 5 }}>
         <div className="flex items-center justify-between mb-2">
             <p className="text-xs flex">

@@ -14,7 +14,7 @@
     "date-fns": "^4.1.0",
     "js-cookie": "^3.0.5",
     "jwt-decode": "^4.0.0",
-    "libphonenumber-js": "^1.12.10",
+    "libphonenumber-js": "^1.12.11",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-hot-toast": "^2.5.2",
@@ -23,6 +23,8 @@
     "react-router-dom": "^7.7.0",
     "react-scripts": "5.0.1",
     "react-uploader": "^3.43.0",
+    "slate": "^0.118.0",
+    "slate-react": "^0.117.4",
     "web-vitals": "^2.1.4"
   },
   "scripts": {

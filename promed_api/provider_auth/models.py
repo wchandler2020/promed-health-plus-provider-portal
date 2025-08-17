@@ -3,10 +3,18 @@ from django.contrib.auth.models import AbstractUser
 from django.db.models.signals import post_save
 from django.conf import settings
 from django.utils import timezone
+from sales_rep.models import SalesRep
 import random
 
 verification_methods = (
     ('email', 'Email'), ('sms', 'SMS')
+)
+
+ROLES = (
+    ('Primary Care Provider', 'Primary Care Provider'),
+    ('Nurse', 'Nurse'),
+    ('Administrator', 'Administrator'),
+    ('Medical Supply Technician', 'Medical Supply Technician'),
 )
 
 def generate_code():
@@ -38,7 +46,11 @@ class User(AbstractUser):
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    sales_rep = models.ForeignKey(SalesRep, on_delete=models.SET_NULL, null=True, blank=True, related_name="providers")
     image = models.FileField(upload_to='images', default=f'{settings.MEDIA_URL}images/default_user.jpg', null=True, blank=True)
+    role = models.CharField(max_length=200, choices=ROLES, null=True, blank=True)
+    facility = models.CharField(max_length=200, null=True, blank=True)
+    facility_phone_number = models.CharField(max_length=20, null=True, blank=True)
     full_name = models.CharField(max_length=255, null=True, blank=True)
     phone_number = models.CharField(max_length=20, blank=True, null=True) 
     country = models.CharField(max_length=255, null=True, blank=True)

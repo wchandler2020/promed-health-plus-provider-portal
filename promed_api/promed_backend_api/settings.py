@@ -17,6 +17,7 @@ USER_APPS = [
     'provider_auth.apps.ProviderAuthConfig',
     'onboarding_ops.apps.OnboardingOpsConfig',
     'patients.apps.PatientsConfig',
+    'sales_rep.apps.SalesRepConfig',
 ]
 
 THIRD_PARTY_APPS = [
@@ -212,6 +213,18 @@ JAZZMIN_UI_TWEAKS = {
         "success": "btn-success"
     }
 }
+
+## EMAIL CONFIGURATIONS
+EMAIL_BACKEND = 'anymail.backends.sendgrid.EmailBackend'
+
+SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
+
+EMAIL_HOST = 'smtp.sendgrid.net'
+EMAIL_HOST_USER = 'apikey' # this is exactly the value 'apikey'
+EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = 'vastyle2010@gmail.com'
 
 ## AMAZON S3 settings:
 

@@ -42,9 +42,12 @@ const Navbar = () => {
     { id: 2, text: "Test results are available" },
   ]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [profile, setProfile] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
   const notificationRef = useRef(null);
 
-  const { user, logout } = useContext(AuthContext);
+  // const { user, logout } = useContext(AuthContext);
+  const { user, logout, verifyToken } = useContext(AuthContext);
   const isAuthenticated = !!user && user.verified;
 
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
@@ -90,6 +93,22 @@ const Navbar = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const { success, data } = await verifyToken(
+        localStorage.getItem("accessToken")
+      );
+      if (success) {
+        setProfile(data);
+      }
+      setLoadingProfile(false);
+    };
+
+    if (isAuthenticated) {
+      fetchProfile();
+    }
+  }, [isAuthenticated, verifyToken]);
 
   return (
     <div className="bg-white px-6 sm:px-8 mt-2 mb-10">
@@ -159,7 +178,7 @@ const Navbar = () => {
               ref={notificationRef}
             >
               <IoIosNotificationsOutline
-                className="text-2xl text-gray-600 cursor-pointer"
+                className="text-3xl text-gray-600 cursor-pointer"
                 onClick={() => setShowDropdown((prev) => !prev)}
               />
               {notificationCount > 0 && (
@@ -185,14 +204,6 @@ const Navbar = () => {
                 </div>
               )}
             </div>
-            {/* <h6 className="text-sm font-medium text-gray-800">
-              Dr. Kara Johnson
-            </h6>
-            <img
-              src={default_user_img}
-              alt="User Profile"
-              className="w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm"
-            /> */}
             <div
               className="relative"
               onClick={() => setShowProfileDropdown(true)}
@@ -201,12 +212,21 @@ const Navbar = () => {
             >
               <div className="flex items-center space-x-2 cursor-pointer">
                 <h6 className="text-sm font-medium text-gray-800">
-                  Dr. Kara Johnson
+                  {profile?.full_name ||
+                    profile?.user?.full_name ||
+                    "Dr. Kara Johnson"}
                 </h6>
+
                 <img
-                  src={default_user_img}
+                  src={
+                    profile?.image?.startsWith("http")
+                      ? profile.image
+                      : profile?.image
+                      ? `${process.env.REACT_APP_MEDIA_URL}${profile.image}`
+                      : default_user_img
+                  }
                   alt="User Profile"
-                  className="w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm"
+                  className="w-10 h-10 rounded-full object-cover object-top border border-gray-300 shadow-sm"
                 />
               </div>
 
@@ -216,14 +236,14 @@ const Navbar = () => {
                     to="/profile"
                     className="flex items-center px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 cursor-pointer uppercase"
                   >
-                    <IoEyeOutline className="mr-1"/>
+                    <IoEyeOutline className="mr-1" />
                     View Profile
                   </Link>
                   <a
                     onClick={logout}
                     className="flex items-center px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 cursor-pointer uppercase"
                   >
-                    <IoMdLogOut className="mr-1"/>
+                    <IoMdLogOut className="mr-1" />
                     Logout
                   </a>
                 </div>
@@ -324,13 +344,22 @@ const Navbar = () => {
                     )}
                   </div>
                   <div className="flex flex-row items-center">
-                    <h6 className="text-sm font-medium text-gray-800 mr-2">
-                      Dr. Kara Johnson
+                    <h6 className="text-sm font-medium text-gray-800">
+                      {profile?.full_name ||
+                        profile?.user?.full_name ||
+                        "Dr. Kara Johnson"}
                     </h6>
+
                     <img
-                      src={default_user_img}
+                      src={
+                        profile?.image?.startsWith("http")
+                          ? profile.image
+                          : profile?.image
+                          ? `${process.env.REACT_APP_MEDIA_URL}${profile.image}`
+                          : default_user_img
+                      }
                       alt="User Profile"
-                      className="w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm"
+                      className="w-10 h-10 rounded-full object-cover object-top border border-gray-300 shadow-sm"
                     />
                   </div>
                 </div>
