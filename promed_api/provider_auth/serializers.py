@@ -17,14 +17,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
             Returns:
                 A JWT token instance (a dictionary-like object) with custom claims added.
         """
-        # Call the parent class's get_token method.
-        # This generates the standard JWT token, which includes claims like
-        # 'user_id', 'exp' (expiration time), 'iat' (issued at time), etc.
         token = super().get_token(user)
-        # Add custom claims to the token payload.
-        # These fields will be accessible directly from the decoded JWT on the client-side.
-        # Ensure that 'full_name', 'email', and 'username' are attributes of your User model.
-        # For 'full_name', a more robust approach for Django's default User model might be user.get_full_name().
         token['full_name'] = user.full_name
         token['email'] = user.email
         token['username'] = user.username
