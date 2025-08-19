@@ -101,3 +101,5 @@ class VerifyCodeView(generics.CreateAPIView):
             return Response({'verified': False, 'error': 'Invalid code'}, status=status.HTTP_400_BAD_REQUEST)
         request.session['mfa'] = True  # Mark session as verified
         return Response({'verified': True}, status=status.HTTP_200_OK)
+
+

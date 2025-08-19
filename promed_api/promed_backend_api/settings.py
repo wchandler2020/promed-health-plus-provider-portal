@@ -2,8 +2,23 @@ from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
 import os
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
+
 
 load_dotenv()
+sentry_sdk.init(
+    dsn="https://e8b8032c2344202bda64fc938e4dc5db@o4509803038113792.ingest.us.sentry.io/4509803039031296",
+    integrations=[DjangoIntegration()],
+    traces_sample_rate=1.0,  # Set lower in production (e.g., 0.1)
+    send_default_pii=True    # Sends user info if available
+)
+# sentry_sdk.init(
+#     dsn="https://e8b8032c2344202bda64fc938e4dc5db@o4509803038113792.ingest.us.sentry.io/4509803039031296",
+#     # Add data like request headers and IP for users,
+#     # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+#     send_default_pii=True,
+# )
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 

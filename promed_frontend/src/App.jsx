@@ -13,11 +13,24 @@ import PrivateRoute from './utils/privateRoutes';
 import FillablePdf from './components/dashboard/documemts/FillablePdf';
 import Home from './components/home/Home';
 
+function ErrorButton() {
+  return (
+    <button
+      onClick={() => {
+        throw new Error('This is your first error!');
+      }}
+    >
+      Break the world
+    </button>
+  );
+}
+
 function AppWrapper() {
   const location = useLocation();
   const hideNavbarPaths = ['/login', '/register', '/mfa'];
 
   const shouldHideNavbar = hideNavbarPaths.includes(location.pathname);
+  ErrorButton();
 
   return (
     <>

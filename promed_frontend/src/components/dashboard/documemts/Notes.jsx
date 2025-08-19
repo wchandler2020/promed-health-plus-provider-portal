@@ -12,7 +12,6 @@ const ini = [
         children: [{ text: "" }]
     },
 ];
-
 // Convert Slate value to HTML
 const serialize = (value) => {
     return JSON.stringify(value);
@@ -30,6 +29,7 @@ const deserialize = (html) => {
 }
 
 const Notes = ({ patientId }) => {
+    
     const [notes, setNotes] = useState([]);
     const [editingNote, setEditingNote] = useState(null);
     const [showEditor, setShowEditor] = useState(false);
