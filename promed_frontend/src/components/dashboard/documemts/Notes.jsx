@@ -110,7 +110,9 @@ const Notes = ({ patientId }) => {
         setEditingNote(note);
         setEditorTitle(note ? note.title : "");
         setEditorValue(note && note.body ? deserialize(note.body) : ini);
+        setFile(null);
         setShowEditor(true);
+        
     };
 
 

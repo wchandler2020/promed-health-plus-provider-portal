@@ -32,6 +32,7 @@ USER_APPS = [
     'provider_auth.apps.ProviderAuthConfig',
     'onboarding_ops.apps.OnboardingOpsConfig',
     'patients.apps.PatientsConfig',
+    'sales_rep.apps.SalesRepConfig',
     'notes.apps.NotesConfig',
 ]
 
@@ -101,18 +102,32 @@ DATABASES = {
     }
 }
 
+# AUTH_PASSWORD_VALIDATORS = [
+#     {
+#         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+#     },
+#     {
+#         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+#         'OPTIONS': {'min_length': 12},  # HIPAA best practice
+#     },
+#     {
+#         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+#     },
+#     {
+#         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+#     },
+# ]
+
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'NAME': 'core.validators.HIPAAPasswordValidator',  # Your custom validator
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
+    # Optional but helpful
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
 ]
 
@@ -229,6 +244,18 @@ JAZZMIN_UI_TWEAKS = {
     }
 }
 
+## EMAIL CONFIGURATIONS
+EMAIL_BACKEND = 'anymail.backends.sendgrid.EmailBackend'
+
+SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
+
+EMAIL_HOST = 'smtp.sendgrid.net'
+EMAIL_HOST_USER = 'apikey' # this is exactly the value 'apikey'
+EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = 'vastyle2010@gmail.com'
+
 ## AMAZON S3 settings:
 
 # AWS S3 Settings (assuming you've got these from your AWS console)
@@ -243,7 +270,7 @@ AWS_QUERYSTRING_AUTH = False # For more secure, clean URLs for public files, or 
 AWS_DEFAULT_ACL = None # Recommended: let bucket policies manage access. If you need public files, use 'public-read' (e.g., for user profile pics, but not for HIPAA data).
 AWS_S3_VERITY = True
 # Default File Storage (important!)
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 # If you also have static files on S3 (optional)
 STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'

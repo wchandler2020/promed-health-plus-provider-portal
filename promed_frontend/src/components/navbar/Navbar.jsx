@@ -1,7 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import default_user_img from "../../assets/images/default_user.jpg";
 import { IoIosNotificationsOutline } from "react-icons/io";
+import { IoEyeOutline } from "react-icons/io5";
+import { IoMdLogOut } from "react-icons/io";
 import { Link } from "react-router-dom";
+import { AuthContext } from "../../utils/auth";
 
 const MobileMenuIconSVG = () => (
   <svg
@@ -33,14 +36,22 @@ const CloseMenuIconSVG = () => (
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticate] = useState(false);
   const [notificationCount, setNotificationCount] = useState(2);
   const [notifications] = useState([
     { id: 1, text: "New appointment request" },
     { id: 2, text: "Test results are available" },
   ]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [profile, setProfile] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
   const notificationRef = useRef(null);
+
+  // const { user, logout } = useContext(AuthContext);
+  const { user, logout, verifyToken } = useContext(AuthContext);
+  const isAuthenticated = !!user && user.verified;
+
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const profileRef = useRef(null);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -71,13 +82,38 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setShowProfileDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const { success, data } = await verifyToken(
+        localStorage.getItem("accessToken")
+      );
+      if (success) {
+        setProfile(data);
+      }
+      setLoadingProfile(false);
+    };
+
+    if (isAuthenticated) {
+      fetchProfile();
+    }
+  }, [isAuthenticated, verifyToken]);
+
   return (
     <div className="bg-white px-6 sm:px-8 mt-2 mb-10">
       <nav className="relative px-4 py-4 flex justify-between items-center bg-white">
-        <Link
-          className="text-2xl sm:text-3xl font-bold leading-none"
-          to="/dashboard/"
-        >
+        <Link className="text-2xl sm:text-3xl font-bold leading-none" to="/">
           ProMed Health Plus
         </Link>
 
@@ -94,11 +130,21 @@ const Navbar = () => {
           <li>
             <Link
               className="text-base text-gray-800 hover:text-emerald-500"
-              to="/dashboard/"
+              to="/"
             >
               Home
             </Link>
           </li>
+          {isAuthenticated && (
+            <li>
+              <Link
+                className="text-base text-gray-800 hover:text-emerald-500"
+                to="/dashboard/"
+              >
+                Dashboard
+              </Link>
+            </li>
+          )}
           <li>
             <Link
               className="text-base text-gray-800 hover:text-emerald-500"
@@ -127,9 +173,12 @@ const Navbar = () => {
 
         {isAuthenticated ? (
           <div className="hidden lg:flex items-center space-x-4">
-            <div className="relative notification-container" ref={notificationRef}>
+            <div
+              className="relative notification-container"
+              ref={notificationRef}
+            >
               <IoIosNotificationsOutline
-                className="text-2xl text-gray-600 cursor-pointer"
+                className="text-3xl text-gray-600 cursor-pointer"
                 onClick={() => setShowDropdown((prev) => !prev)}
               />
               {notificationCount > 0 && (
@@ -155,14 +204,51 @@ const Navbar = () => {
                 </div>
               )}
             </div>
-            <h6 className="text-sm font-medium text-gray-800">
-              Dr. Kara Johnson
-            </h6>
-            <img
-              src={default_user_img}
-              alt="User Profile"
-              className="w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm"
-            />
+            <div
+              className="relative"
+              onClick={() => setShowProfileDropdown(true)}
+              // onMouseLeave={() => setShowProfileDropdown(false)}
+              ref={profileRef}
+            >
+              <div className="flex items-center space-x-2 cursor-pointer">
+                <h6 className="text-sm font-medium text-gray-800">
+                  {profile?.full_name ||
+                    profile?.user?.full_name ||
+                    "Dr. Kara Johnson"}
+                </h6>
+
+                <img
+                  src={
+                    profile?.image?.startsWith("http")
+                      ? profile.image
+                      : profile?.image
+                      ? `${process.env.REACT_APP_MEDIA_URL}${profile.image}`
+                      : default_user_img
+                  }
+                  alt="User Profile"
+                  className="w-10 h-10 rounded-full object-cover object-top border border-gray-300 shadow-sm"
+                />
+              </div>
+
+              {showProfileDropdown && (
+                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                  <Link
+                    to="/profile"
+                    className="flex items-center px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 cursor-pointer uppercase"
+                  >
+                    <IoEyeOutline className="mr-1" />
+                    View Profile
+                  </Link>
+                  <a
+                    onClick={logout}
+                    className="flex items-center px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 cursor-pointer uppercase"
+                  >
+                    <IoMdLogOut className="mr-1" />
+                    Logout
+                  </a>
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <div className="hidden lg:flex items-center space-x-4">
@@ -192,10 +278,7 @@ const Navbar = () => {
         ></div>
         <nav className="fixed top-0 left-0 bottom-0 flex flex-col w-5/6 max-w-sm py-6 px-6 bg-white border-r overflow-y-auto">
           <div className="flex items-center mb-8">
-            <Link
-              className="mr-auto text-3xl font-bold leading-none"
-              to="/dashboard/"
-            >
+            <Link className="mr-auto text-3xl font-bold leading-none" to="/">
               ProMed Health Plus
             </Link>
             <button className="navbar-close" onClick={closeMobileMenu}>
@@ -207,11 +290,21 @@ const Navbar = () => {
             <li className="mb-1">
               <Link
                 className="block p-4 text-sm font-semibold text-gray-800 hover:bg-blue-50 hover:text-blue-600 rounded"
-                to="/dashboard/"
+                to="/"
               >
                 Home
               </Link>
             </li>
+            {isAuthenticated && (
+              <li className="mb-1">
+                <Link
+                  className="block p-4 text-sm font-semibold text-gray-800 hover:bg-blue-50 hover:text-blue-600 rounded"
+                  to="/dashboard/"
+                >
+                  Dashboard
+                </Link>
+              </li>
+            )}
             <li className="mb-1">
               <Link
                 className="block p-4 text-sm font-semibold text-gray-800 hover:bg-blue-50 hover:text-blue-600 rounded"
@@ -240,25 +333,47 @@ const Navbar = () => {
 
           <div className="mt-auto pt-6 flex flex-col">
             {isAuthenticated ? (
-              <div className="flex items-center space-x-4 justify-between">
-                <div className="relative">
-                  <IoIosNotificationsOutline className="text-2xl text-gray-600 cursor-pointer" />
-                  {notificationCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-semibold rounded-full h-5 w-5 flex items-center justify-center">
-                      {notificationCount}
-                    </span>
-                  )}
+              <div className="flex flex-col space-y-4">
+                <div className="flex items-center space-x-4 justify-between">
+                  <div className="relative">
+                    <IoIosNotificationsOutline className="text-2xl text-gray-600 cursor-pointer" />
+                    {notificationCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-semibold rounded-full h-5 w-5 flex items-center justify-center">
+                        {notificationCount}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex flex-row items-center">
+                    <h6 className="text-sm font-medium text-gray-800">
+                      {profile?.full_name ||
+                        profile?.user?.full_name ||
+                        "Dr. Kara Johnson"}
+                    </h6>
+
+                    <img
+                      src={
+                        profile?.image?.startsWith("http")
+                          ? profile.image
+                          : profile?.image
+                          ? `${process.env.REACT_APP_MEDIA_URL}${profile.image}`
+                          : default_user_img
+                      }
+                      alt="User Profile"
+                      className="w-10 h-10 rounded-full object-cover object-top border border-gray-300 shadow-sm"
+                    />
+                  </div>
                 </div>
-                <div className="flex flex-row items-center">
-                  <h6 className="text-sm font-medium text-gray-800 mr-2">
-                    Dr. Kara Johnson
-                  </h6>
-                  <img
-                    src={default_user_img}
-                    alt="User Profile"
-                    className="w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm"
-                  />
-                </div>
+
+                {/* 👇 New Logout button for mobile */}
+                <button
+                  onClick={() => {
+                    logout();
+                    closeMobileMenu();
+                  }}
+                  className="w-full px-4 py-2 text-sm tracking-wide text-gray-700 border border-gray-300 rounded-md transition-colors duration-200 hover:bg-gray-100 focus:outline-none focus:ring focus:ring-gray-300 focus:ring-opacity-50"
+                >
+                  Logout
+                </button>
               </div>
             ) : (
               <div className="flex flex-col space-y-4">

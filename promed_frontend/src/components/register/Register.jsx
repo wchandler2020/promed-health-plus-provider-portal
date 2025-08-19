@@ -2,6 +2,8 @@ import React, { useState, useContext } from "react";
 import { AuthContext } from "../../utils/auth";
 import { useNavigate } from "react-router-dom";
 import bg_image from "../../assets/images/bg_image_01.jpg";
+import { Link } from "react-router-dom";
+import { IoArrowBack } from "react-icons/io5";
 
 const Register = () => {
   const { register } = useContext(AuthContext);
@@ -51,8 +53,19 @@ const Register = () => {
           className="relative hidden bg-cover lg:block lg:w-2/3"
           style={{ backgroundImage: `url(${bg_image})` }}
         >
-          <div className="absolute inset-0 bg-black opacity-30"></div>
-          <div className="flex items-center h-full px-20 bg-gray-9600 bg-opacity-40 relative z-10">
+          {/* Overlay */}
+          <div className="absolute inset-0 bg-black opacity-30 z-10"></div>
+
+          {/* Back arrow */}
+          <Link
+            to="/"
+            className="absolute top-6 left-6 z-50 text-white hover:text-blue-300 transition duration-200"
+            title="Back to Home"
+          >
+            <IoArrowBack size={28} />
+          </Link>
+
+          <div className="flex items-center h-full px-20 bg-gray-9600 bg-opacity-40 relative z-20">
             <div>
               <h2 className="text-4xl font-bold text-black">
                 ProMed Health Plus
@@ -73,7 +86,7 @@ const Register = () => {
               <h2 className="text-4xl font-bold text-center text-gray-700 dark:text-white">
                 Brand
               </h2>
-              <p className="mt-3 text-gray-900">Create your account</p>
+              <p className="mt-3 text-gray-900 text-xl font-bold">Create your account</p>
             </div>
 
             <div className="mt-8">
@@ -173,8 +186,12 @@ const Register = () => {
                     {isLoading ? "Registering..." : "Register"}
                   </button>
 
-                  {errorMsg && <p className="mt-2 text-sm text-red-500">{errorMsg}</p>}
-                  {successMsg && <p className="mt-2 text-sm text-green-500">{successMsg}</p>}
+                  {errorMsg && (
+                    <p className="mt-2 text-sm text-red-500">{errorMsg}</p>
+                  )}
+                  {successMsg && (
+                    <p className="mt-2 text-sm text-green-500">{successMsg}</p>
+                  )}
                 </div>
               </form>
 

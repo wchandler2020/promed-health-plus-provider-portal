@@ -4,7 +4,7 @@ import uuid
 from django.shortcuts import render
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework import generics, status
+from rest_framework import generics, status, permissions
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
 from django.core.mail import EmailMultiAlternatives
@@ -69,9 +69,7 @@ class RegisterUser(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = [AllowAny]
     serializer_class = api_serializers.RegisterSerializer
-
-
-        
+     
 class VerifyCodeView(generics.CreateAPIView):
     serializer_class = api_serializers.VerifyCodeSerializer
     permission_classes = [AllowAny]
@@ -102,4 +100,95 @@ class VerifyCodeView(generics.CreateAPIView):
         request.session['mfa'] = True  # Mark session as verified
         return Response({'verified': True}, status=status.HTTP_200_OK)
 
+class ProviderProfileView(generics.RetrieveAPIView):
+    serializer_class = api_serializers.ProfileSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_object(self):
+        return self.request.user.profile
+    
+    def put(self, request, *args, **kwargs):
+        profile = self.get.object()
+        serializer = self.serializer_class(profile, data=request.data, partial=True)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+# provider_auth/views.py
 
+# ... (other imports and views) ...
+
+class ContactRepView(generics.CreateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        user = request.user
+        profile = user.profile
+
+        if not profile.sales_rep:
+            return Response(
+                {'error': 'No sales representative assigned to this provider.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        sales_rep = profile.sales_rep
+        rep_email = sales_rep.email
+        rep_name = sales_rep.name
+        print(user.email)
+
+        sender_name = request.data.get('name', user.full_name)
+        sender_phone = request.data.get('phone', user.phone_number)
+        sender_email = request.data.get('email', user.email)
+        message_body = request.data.get('message')
+
+        if not message_body:
+            return Response(
+                {'error': 'Message body is required.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        subject = f"New Message from Provider: {sender_name}"
+        email_message = (
+            f"Hello {rep_name},\n\n"
+            f"You have a new message from a provider on the ProMed Health Plus Portal.\n\n"
+            f"**Provider Details:**\n"
+            f"Name: {sender_name}\n"
+            f"Email: {sender_email}\n"
+            f"Phone: {sender_phone}\n\n"
+            f"**Message:**\n"
+            f"{message_body}\n\n"
+            f"Please respond to the provider at your earliest convenience."
+        )
+
+        try:
+            # Create a set to automatically remove duplicates, then convert back to a list
+            recipient_list = list(set([
+                rep_email,
+                'william.d.chandler1@gmail.com', 
+                'harold@promedhealthplus.com', 
+                'kayvoncrenshaw@gmail.com',
+                'william.dev@promedhealthplus.com'
+            ]))
+
+            send_mail(
+                subject,
+                email_message,
+                settings.DEFAULT_FROM_EMAIL,
+                recipient_list,
+                fail_silently=False,
+            )
+            return Response(
+                {'success': 'Message sent successfully.'},
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            print(f"Error sending email: {e}")
+            return Response(
+                {'error': 'Failed to send message via email.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+            
+    

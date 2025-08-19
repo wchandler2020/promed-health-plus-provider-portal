@@ -7,7 +7,7 @@ const PrivateRoute = ({ children }) => {
   const { user } = useContext(AuthContext);
   
   if(!user){
-    return <Navigate to="/login" />;
+    return <Navigate to="/" />;
   }
   if(!user.verified){
     return <Navigate to="/mfa" />;

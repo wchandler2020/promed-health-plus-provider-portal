@@ -8,6 +8,8 @@ import {
   Button,
   TextField,
   MenuItem,
+  Box,
+  Modal,
 } from "@mui/material";
 
 import { format } from "date-fns";
@@ -182,7 +184,7 @@ const PatientCard = ({ patient, onViewPdf }) => {
         style={{ marginTop: 25 }}
       ></div>
       <p className="text-sm font-semibold text-center">Patient Documentation</p>
-      
+
       <div className="text-sm text-gray-700 space-y-1" style={{ marginTop: 5 }}>
         <div className="flex items-center justify-between">
           <p className="text-xs flex">
@@ -354,12 +356,24 @@ const Patients = () => {
     setViewPdfModalOpen(true);
   };
 
+  const modalStyle = {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+    width: "100%",
+    maxWidth: 600,
+    bgcolor: "transparent",
+    boxShadow: "none",
+    outline: "none",
+  };
+
   return (
     <div className="max-w-5xl mx-auto mt-10 p-6 bg-white shadow-lg rounded">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-semibold">Patient Applications</h2>
         <button
-          className="border border-emerald-500 text-emerald-500 hover:bg-emerald-500 hover:text-white px-4 py-2 rounded-md transition-all sm:text-sm text-xs"
+          className="border border-emerald-500 text-emerald-500 hover:bg-emerald-500 hover:text-white px-4 py-2 rounded-md transition-all text-xs"
           onClick={() => setOpen(true)}
         >
           + New Patient
@@ -418,160 +432,223 @@ const Patients = () => {
         className="px-3 py-1 rounded border bg-gray-100 disabled:opacity-50">Next</button>
       </div>
 
-      <Dialog
-        open={open}
-        onClose={() => setOpen(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>➕ Add New Patient</DialogTitle>
-        <DialogContent dividers>
-          <div className="space-y-4">
-            <TextField
-              label="First Name"
-              name="first_name"
-              value={formData.first_name}
-              onChange={handleInputChange}
-              error={!!errors.first_name}
-              fullWidth
-            />
-            <TextField
-              label="Last Name"
-              name="last_name"
-              value={formData.last_name}
-              onChange={handleInputChange}
-              error={!!errors.last_name}
-              fullWidth
-            />
-            <TextField
-              label="Middle Initial"
-              name="middle_initial"
-              value={formData.middle_initial} 
-              onChange={handleInputChange}
-              fullWidth
-            />
-            {/* CORRECTED: Add Date of Birth field */}
-            <TextField
-              type="date"
-              label="Date of Birth"
-              name="date_of_birth"
-              value={formData.date_of_birth}
-              onChange={handleInputChange}
-              InputLabelProps={{ shrink: true }}
-              error={!!errors.date_of_birth}
-              fullWidth
-            />
-            <TextField
-              label="Address"
-              name="address"
-              value={formData.address}
-              onChange={handleInputChange}
-              fullWidth
-            />
-            <TextField
-              label="City"
-              name="city"
-              value={formData.city}
-              onChange={handleInputChange}
-              fullWidth
-            />
-            <TextField
-              label="State"
-              name="state"
-              value={formData.state}
-              onChange={handleInputChange}
-              fullWidth
-            />
-            <TextField
-              label="Zip Code"
-              name="zip_code"
-              value={formData.zip_code}
-              onChange={handleInputChange}
-              fullWidth
-            />
-            <TextField
-              label="Phone Number"
-              name="phone_number"
-              value={formData.phone_number}
-              onChange={handleInputChange}
-              fullWidth
-            />
-            <TextField
-              label="Primary Insurance"
-              name="primary_insurance"
-              value={formData.primary_insurance}
-              onChange={handleInputChange}
-              fullWidth
-            />
-            <TextField
-              label="Primary Insurance Number"
-              name="primary_insurance_number"
-              value={formData.primary_insurance_number}
-              onChange={handleInputChange}
-              fullWidth
-            />
-            <TextField
-              label="Secondary Insurance"
-              name="secondary_insurance"
-              value={formData.secondary_insurance}
-              onChange={handleInputChange}
-              fullWidth
-            />
-            <TextField
-              label="Secondary Insurance Number"
-              name="secondary_insurance_number"
-              value={formData.secondary_insurance_number}
-              onChange={handleInputChange}
-              fullWidth
-            />
-            <TextField
-              label="Tertiary Insurance"
-              name="tertiary_insurance"
-              value={formData.tertiary_insurance}
-              onChange={handleInputChange}
-              fullWidth
-            />
-            <TextField
-              label="Tertiary Insurance Number"
-              name="tertiary_insurance_number"
-              value={formData.tertiary_insurance_number}
-              onChange={handleInputChange}
-              fullWidth
-            />
-            <TextField
-              label="Medical Record Number"
-              name="medical_record_number"
-              value={formData.medical_record_number}
-              onChange={handleInputChange}
-              fullWidth
-            />
-            <TextField
-              select
-              label="IVR Status"
-              name="ivrStatus"
-              value={formData.ivrStatus}
-              onChange={handleInputChange}
-              fullWidth
+      <Modal open={open} onClose={() => setOpen(false)}>
+        <Box sx={modalStyle}>
+          <div className="bg-white rounded-2xl shadow-2xl p-8 mx-4 border border-gray-100 relative">
+            {/* Close button */}
+            <button
+              onClick={() => setOpen(false)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 transition"
+              aria-label="Close"
             >
-              {["Approved", "Pending", "Denied"].map((status) => (
-                <MenuItem key={status} value={status}>
-                  {status}
-                </MenuItem>
-              ))}
-            </TextField>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+
+            {/* Header */}
+            <h2 className="text-3xl font-bold text-center text-gray-800 mb-2">
+              Add New Patient
+            </h2>
+            <p className="text-center text-gray-500 mb-6">
+              Fill out the form to register a new patient.
+            </p>
+
+            {/* Form */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleAddPatient();
+              }}
+              className="space-y-6"
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    First Name
+                  </label>
+                  <input
+                    type="text"
+                    name="first_name"
+                    value={formData.first_name}
+                    onChange={handleInputChange}
+                    required
+                    className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  />
+                  {errors.first_name && (
+                    <p className="text-red-500 text-sm">{errors.first_name}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Last Name
+                  </label>
+                  <input
+                    type="text"
+                    name="last_name"
+                    value={formData.last_name}
+                    onChange={handleInputChange}
+                    required
+                    className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  />
+                  {errors.last_name && (
+                    <p className="text-red-500 text-sm">{errors.last_name}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Middle Initial
+                  </label>
+                  <input
+                    type="text"
+                    name="middle_initial"
+                    value={formData.middle_initial}
+                    onChange={handleInputChange}
+                    className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Date of Birth
+                  </label>
+                  <input
+                    type="date"
+                    name="date_of_birth"
+                    value={formData.date_of_birth}
+                    onChange={handleInputChange}
+                    required
+                    className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  />
+                  {errors.date_of_birth && (
+                    <p className="text-red-500 text-sm">
+                      {errors.date_of_birth}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Address
+                  </label>
+                  <input
+                    type="text"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    City
+                  </label>
+                  <input
+                    type="text"
+                    name="city"
+                    value={formData.city}
+                    onChange={handleInputChange}
+                    className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <div className="w-2/3">
+                  <label className="block text-sm font-medium text-gray-700">
+                    State
+                  </label>
+                  <input
+                    type="text"
+                    name="state"
+                    value={formData.state}
+                    onChange={handleInputChange}
+                    className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  />
+                </div>
+                <div className="w-1/3">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Zip Code
+                  </label>
+                  <input
+                    type="text"
+                    name="zip_code"
+                    value={formData.zip_code}
+                    onChange={handleInputChange}
+                    className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  name="phone_number"
+                  value={formData.phone_number}
+                  onChange={handleInputChange}
+                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                />
+              </div>
+
+              {/* You can continue with Insurance fields similarly */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Primary Insurance
+                  </label>
+                  <input
+                    type="text"
+                    name="primary_insurance"
+                    value={formData.primary_insurance}
+                    onChange={handleInputChange}
+                    className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Primary Insurance Number
+                  </label>
+                  <input
+                    type="text"
+                    name="primary_insurance_number"
+                    value={formData.primary_insurance_number}
+                    onChange={handleInputChange}
+                    className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Submit button */}
+              <button
+                type="submit"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition duration-300"
+              >
+                Save Patient
+              </button>
+            </form>
           </div>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpen(false)}>Cancel</Button>
-          <Button
-            onClick={handleAddPatient}
-            variant="contained"
-            color="primary"
-          >
-            Add Patient
-          </Button>
-        </DialogActions>
-      </Dialog>
+        </Box>
+      </Modal>
+
       <Dialog
         open={viewPdfModalOpen}
         onClose={() => setViewPdfModalOpen(false)}
