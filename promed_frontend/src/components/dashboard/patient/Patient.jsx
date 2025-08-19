@@ -218,6 +218,7 @@ const Patients = () => {
   const [ivrFilter, setIvrFilter] = useState("");
   const [patientsPerPage, setPatientsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+  const [savePage, setSavePage] = useState(1);
 
   // CORRECTED: Add date_of_birth field to initial state
   const [formData, setFormData] = useState({
@@ -268,6 +269,17 @@ const Patients = () => {
     };
     fetchPatients();
   }, [getPatients]);
+
+  useEffect(() =>{
+    if (searchTerm || ivrFilter) {
+      // Save the current page if filtering
+      setSavePage(currentPage);
+      setCurrentPage(1);
+    } else {
+      // Restore the last page
+      setCurrentPage(savePage);
+    }
+  }, [searchTerm, ivrFilter]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
