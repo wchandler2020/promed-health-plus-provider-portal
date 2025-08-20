@@ -15,6 +15,18 @@ import Home from "./components/home/Home";
 import Footer from "./components/footer/Footer";
 import ProviderProfileCard from "./components/profile/ProviderProfileCard";
 
+function ErrorButton() {
+  return (
+    <button
+      onClick={() => {
+        throw new Error('This is your first error!');
+      }}
+    >
+      Break the world
+    </button>
+  );
+}
+
 function AppWrapper() {
   const location = useLocation();
   const hideNavbarPaths = ['/login', '/register', '/register/', '/mfa'];

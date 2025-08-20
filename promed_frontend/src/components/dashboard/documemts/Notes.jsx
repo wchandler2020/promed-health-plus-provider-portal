@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { createEditor, Transforms } from "slate";
-import { Slate, Editable, withReact } from "slate-react";
+import { createEditor, Editor, Transforms, Text } from "slate";
+import { Slate, Editable, withReact, useSlate } from "slate-react";
 import authRequest from "../../../utils/axios";
 import { API_BASE_URL } from '../../../utils/constants';
 import { set } from 'date-fns';
@@ -12,7 +12,6 @@ const ini = [
         children: [{ text: "" }]
     },
 ];
-
 // Convert Slate value to HTML
 const serialize = (value) => {
     return JSON.stringify(value);
@@ -29,15 +28,67 @@ const deserialize = (html) => {
     }
 }
 
+// Editor ToolBar active check
+const isActive = (editor, format) => {
+    const marks = Editor.marks(editor);
+    return marks ? marks[format] === true : false;
+};
+
+// Toggle Toolbar
+const toggle = (editor, format) => {
+    const active = isActive(editor, format);
+    if (active) {
+        Editor.removeMark(editor, format);
+    } else {
+        Editor.addMark(editor, format, true);
+    }
+}
+
+// Toolbar Components
+const ToolbarButton = ({ format, icon, ...props}) => {
+    const editor = useSlate();
+    return (
+        <button
+        type="button"
+        className={`mr-2 px-2 py-1 rounded ${isActive(editor, format) ? "bg-emerald-200" : "bg-gray-200"}`}
+        onMouseDown={event => {
+            event.preventDefault();
+            toggle(editor, format);
+        }}
+        {...props}
+    >
+      {icon}
+    </button>
+  );
+};
+
+// Rendering notes on front end
+function renderNode(node, key = 0) {
+    if (!node) return null;
+    if (node.text !== undefined) {
+        let text = node.text;
+        if (node.bold) text = <strong key={key}>{text}</strong>;
+        if (node.italic) text = <em key={key}>{text}</em>;
+        if (node.underline) text = <u key={key}>{text}</u>;
+        return text;
+    }
+
+    if (node.children) {
+        return (<p key={key}>{node.children.map((child, idx) => renderNode(child, idx))}</p>);
+    }
+    return null;
+}
+
 const Notes = ({ patientId }) => {
+    
     const [notes, setNotes] = useState([]);
     const [editingNote, setEditingNote] = useState(null);
     const [showEditor, setShowEditor] = useState(false);
     const [editorTitle, setEditorTitle] = useState("");
     const [editorValue, setEditorValue] = useState(ini);
+    const [file, setFile] = useState(null);
     const editor = React.useMemo(() => withReact(createEditor()), []);
     
-
     //Fetch notes for patient 
     useEffect(() => {
         if (!patientId) return;
@@ -45,7 +96,7 @@ const Notes = ({ patientId }) => {
             try { 
                 const axioInstance = authRequest();
                 axioInstance.get(`${API_BASE_URL}/notes/?patient=${patientId}`)
-                .then((res) => setNotes(res.data))
+                .then((res) => { console.log(res.data); setNotes(res.data)})
                 .catch(() => setNotes([]));
             } catch (error) {
                 console.error("ErSror fetching notes:", error);
@@ -59,21 +110,26 @@ const Notes = ({ patientId }) => {
         setEditingNote(note);
         setEditorTitle(note ? note.title : "");
         setEditorValue(note && note.body ? deserialize(note.body) : ini);
+        setFile(null);
         setShowEditor(true);
+        
     };
 
 
     //Add or update note
     const handleSave = async () => {
         const text = serialize(editorValue);
+        const formData = new FormData();
+        formData.append('patient', patientId);
+        formData.append('title', editorTitle || "Note");
+        formData.append('body', text);
+        if (file) formData.append('document', file);
         if (editingNote) {
             // Update 
             try {
                 const axiosInstance = authRequest();
-                await axiosInstance.put(`${API_BASE_URL}/notes/${editingNote.id}/`, {
-                    ...editingNote,
-                    title: editorTitle || "Note",
-                    body: text,
+                await axiosInstance.put(`${API_BASE_URL}/notes/${editingNote.id}/`, formData, {
+                    headers: {"Content-Type": "multipart/form-data"}
                 });
             } catch (error) {
                 console.error("Error updating note:", error);
@@ -82,10 +138,12 @@ const Notes = ({ patientId }) => {
             // Create
             try {
                 const axiosInstance = authRequest();
-                await axiosInstance.post(`${API_BASE_URL}/notes/`, {
-                    patient: patientId,
-                    title: editorTitle || "Note",
-                    body: text,
+                await axiosInstance.post(`${API_BASE_URL}/notes/`, formData, {
+                    // patient: patientId,
+                    // title: editorTitle || "Note",
+                    // body: text,
+                    headers: {"Content-Type": "multipart/form-data"}
+
                 });
             } catch (error) {
                 console.error("Error creating note:", error);
@@ -119,9 +177,18 @@ const Notes = ({ patientId }) => {
         }
     };
 
+    // Rendering Marks in Editable
+    const renderLeaf = useCallback(props => {
+        let { children } = props;
+        if (props.leaf.bold) children = <strong>{children}</strong>;
+        if (props.leaf.italic) children = <em>{children}</em>;
+        if (props.leaf.underline) children = <u>{children}</u>;
+        return <span {...props.attributes}>{children}</span>;
+    }, []);
+
     return (
     <div>
-        <p className="text-sm font-semibold text-center">Patient Notes</p>
+        <p className="text-sm font-semibold text-center">Patient Documentation</p>
         <div className="text-sm text-gray-700 space-y-1" style={{ marginTop: 5 }}>
         <div className="flex items-center justify-between mb-2">
             <p className="text-xs flex">
@@ -151,11 +218,15 @@ const Notes = ({ patientId }) => {
                 />
                 </div>
             </div>
-            {Array.isArray(deserialize(note.body)) ? deserialize(note.body).map((node, idx) =>
-                <div key={idx}>
-                {node.children.map((child, childidx) => child.text).join(' ')}
-                </div>
-            ) : note.body}
+            {Array.isArray(deserialize(note.body))
+            ? deserialize(note.body).map((node, idx) => renderNode(node, idx))
+            : note.body}
+
+            {note.document && (
+                <a href={note.document} target='_blank' rel="noopener noreferrer" className='text-blue-600 underline text-xs mt-1'>
+                   {note.document.split('/').pop()}
+                </a>
+            )}
             </div>
         ))}
         {showEditor && Array.isArray(editorValue) && (
@@ -167,11 +238,19 @@ const Notes = ({ patientId }) => {
                 onChange={(e) => setEditorTitle(e.target.value)}
             />
             <Slate
+                key={editingNote ? editingNote.id : `new-${patientId}`}
                 editor={editor}
                 initialValue={editorValue.length > 0 ? editorValue : ini}
                 onChange={val => setEditorValue(Array.isArray(val) ? val : ini)}
             >
+                <div className='flex items-center mb-2'>
+                    <ToolbarButton format="bold" icon={<b>B</b>} />
+                    <ToolbarButton format="italic" icon={<i>I</i>} />
+                    <ToolbarButton format="underline" icon={<u>U</u>} />
+                    <input type="file" className="ml-4" onChange={(e) => setFile(e.target.files[0])} />
+                </div>
                 <Editable
+                renderLeaf={renderLeaf}
                 style={{ minHeight: '100px', border: '1px solid #ccc', padding: '10px' }}
                 />
             </Slate>

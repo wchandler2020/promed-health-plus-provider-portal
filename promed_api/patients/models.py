@@ -4,7 +4,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 
 
-ivr_status_choices = (("Pending", "Pending"), ("Accepted", "Accepted"), ("Denied", "Denied"))
+ivr_status_choices = (("Pending", "Pending"), ("Approved", "Approved"), ("Denied", "Denied"))
 
 # Create your models here.
 class Patient(models.Model):

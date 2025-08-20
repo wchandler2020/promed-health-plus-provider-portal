@@ -217,6 +217,10 @@ const Patients = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [viewPdfModalOpen, setViewPdfModalOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
+  const [ivrFilter, setIvrFilter] = useState("");
+  const [patientsPerPage, setPatientsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [savePage, setSavePage] = useState(1);
 
   // CORRECTED: Add date_of_birth field to initial state
   const [formData, setFormData] = useState({
@@ -268,9 +272,20 @@ const Patients = () => {
     fetchPatients();
   }, [getPatients]);
 
+  useEffect(() =>{
+    if (searchTerm || ivrFilter) {
+      // Save the current page if filtering
+      setSavePage(currentPage);
+      setCurrentPage(1);
+    } else {
+      // Restore the last page
+      setCurrentPage(savePage);
+    }
+  }, [searchTerm, ivrFilter]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: name === "middle_initial" ? value.trim().charAt(0) : value }));
   };
 
   const handleAddPatient = async () => {
@@ -315,9 +330,11 @@ const Patients = () => {
     const fullName =
       `${patient.first_name} ${patient.last_name} ${patient.middle_initial}`.toLowerCase();
     const medRecord = patient.medical_record_number?.toLowerCase() || "";
+    const matchesFilter = ivrFilter ? patient.ivrStatus === ivrFilter : true;
     return (
-      fullName.includes(searchTerm.toLowerCase()) ||
-      medRecord.includes(searchTerm.toLowerCase())
+      (fullName.includes(searchTerm.toLowerCase()) ||
+      medRecord.includes(searchTerm.toLowerCase())) &&
+      matchesFilter
     );
   });
 
@@ -325,6 +342,14 @@ const Patients = () => {
     const active = (status) => ["Approved", "Pending"].includes(status);
     return active(b.ivrStatus) - active(a.ivrStatus);
   });
+
+  // Pagination logic
+  const indexOfLastPatient = currentPage * patientsPerPage;
+  const indexOfFirstPatient = indexOfLastPatient - patientsPerPage;
+  const currentPatients = sortedPatients.slice(indexOfFirstPatient, indexOfLastPatient);
+
+  const totalPages = Math.ceil(sortedPatients.length / patientsPerPage);
+
 
   const handleViewPdf = (patient) => {
     setSelectedPatient(patient);
@@ -366,15 +391,45 @@ const Patients = () => {
           <FaSearch />
         </div>
       </div>
+      <div className="flex items-center mb-5">
+        <label htmlFor="ivr-filter" className="mr-2 text-sm font-medium">Filter by IVR Status:</label>
+          <select id="ivr-filter" value={ivrFilter} onChange={e => setIvrFilter(e.target.value)} className="border border-gray-300 rounded px-2 py-1 text-sm">
+            <option value="">All</option>
+            <option value="Approved">Approved</option>
+            <option value="Pending">Pending</option>
+            <option value="Denied">Denied</option>
+          </select>
+        <div className="ml-auto flex items-center">
+          <label htmlFor="patients-per-page" className="mr-2 text-sm font-medium">Patient per page:</label>
+          <select id="patients-per-page" value={patientsPerPage} onChange={e => {
+            setPatientsPerPage(Number (e.target.value));
+            setCurrentPage(1);
+          }}
+          className="border border-gray-300 rounded px-2 py-1 text-sm" >
+            {[5,10,15,25].map(num => (
+              <option key={num} value={num}>{num}</option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       <div className="space-y-6">
-        {sortedPatients.map((patient) => (
-          <PatientCard
+        {currentPatients.map((patient) => (
+          <PatientCard 
             key={patient.id}
             patient={patient}
             onViewPdf={handleViewPdf}
           />
         ))}
+      </div>
+      <div className="flex justify-center items-center mt-6 space-x-2">
+        <button onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+          className="px-3 py-1 rounded border bg-gray-100 disabled:opacity-50">Prev</button>
+        <span className="mx-2 text-sm">Page {currentPage} of {totalPages}</span>
+        <button onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+        disabled={currentPage === totalPages}
+        className="px-3 py-1 rounded border bg-gray-100 disabled:opacity-50">Next</button>
       </div>
 
       <Modal open={open} onClose={() => setOpen(false)}>
