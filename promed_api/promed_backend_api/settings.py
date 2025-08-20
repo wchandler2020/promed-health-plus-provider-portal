@@ -102,22 +102,6 @@ DATABASES = {
     }
 }
 
-# AUTH_PASSWORD_VALIDATORS = [
-#     {
-#         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-#     },
-#     {
-#         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-#         'OPTIONS': {'min_length': 12},  # HIPAA best practice
-#     },
-#     {
-#         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-#     },
-#     {
-#         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-#     },
-# ]
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'core.validators.HIPAAPasswordValidator',  # Your custom validator
@@ -154,12 +138,6 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
-    # 'DEFAULT_THROTTLE_CLASSES': [
-    #     'rest_framework.throttling.UserRateThrottle',
-    # ],
-    # 'DEFAULT_THROTTLE_RATES': {
-    #     'user': '5/minute',  # limit to 5 requests per minute per user
-    # }
 }
 
 AUTH_USER_MODEL = 'provider_auth.User'
@@ -256,26 +234,16 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = 'vastyle2010@gmail.com'
 
-## AMAZON S3 settings:
+# Add Azure storage configuration
+DEFAULT_FILE_STORAGE = 'yourproject.storage_backends.AzureMediaStorage'
+AZURE_ACCOUNT_NAME = os.getenv('AZURE_ACCOUNT_NAME')
+AZURE_ACCOUNT_KEY = os.getenv('AZURE_ACCOUNT_KEY')
+AZURE_CONTAINER = os.getenv('AZURE_CONTAINER')  # e.g., "media"
+AZURE_CUSTOM_DOMAIN = f'{AZURE_ACCOUNT_NAME}.blob.core.windows.net'
+AZURE_CONNECTION_STRING = os.getenv("AZURE_CONNECTION_STRING")
 
-# AWS S3 Settings (assuming you've got these from your AWS console)
-AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
-AWS_S3_SIGNATURE_NAME = os.getenv('AWS_S3_SIGNATURE_NAME')
-AWS_S3_REGION_NAME = 'us-east-2' # e.g., 'us-east-1', 'eu-west-2'
+MEDIA_URL = f'https://{AZURE_CUSTOM_DOMAIN}/{AZURE_CONTAINER}/'
 
-AWS_S3_FILE_OVERWRITE = False # Prevents overwriting files with the same name
-AWS_QUERYSTRING_AUTH = False # For more secure, clean URLs for public files, or disable if all files are private
-AWS_DEFAULT_ACL = None # Recommended: let bucket policies manage access. If you need public files, use 'public-read' (e.g., for user profile pics, but not for HIPAA data).
-AWS_S3_VERITY = True
-# Default File Storage (important!)
-# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-
-# If you also have static files on S3 (optional)
-STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-# STATIC_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/static/'
-# MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/media/'
 
 # ... rest of your settings
 TWILIO_VERIFY_SERVICE_SID = 'VA0ef166324756821f432fe9a3bf03ef57'  # Replace with your actual Twilio Verify Service SID

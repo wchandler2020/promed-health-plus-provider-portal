@@ -8,7 +8,7 @@ ivr_status_choices = (("Pending", "Pending"), ("Approved", "Approved"), ("Denied
 
 # Create your models here.
 class Patient(models.Model):
-    provider = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    provider = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='patients')
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
     middle_initial = models.CharField(max_length=1, null=True, blank=True)
@@ -30,6 +30,10 @@ class Patient(models.Model):
     date_updated = models.DateTimeField(auto_now=True)
     # Adding new models from what we had before? 
     ivrStatus = models.CharField(max_length=50, choices=ivr_status_choices, null=True, blank=True)
+    
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}".strip()
     
     def __str__(self):
         return str(f'{self.first_name} {self.last_name}')

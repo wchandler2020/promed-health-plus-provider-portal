@@ -4,12 +4,22 @@ from onboarding_ops import views as api_views
 
 urlpatterns = [
     # Provider Forms
-    path('onboarding/forms/', api_views.ProviderFormListCreate.as_view(), name='provider-form-list'),
-    path('onboarding/forms/fill/', api_views.FillPreexistingPDF.as_view(), name='provider-form-list'),
-    path('onboarding/forms/upload/', api_views.UploadFilledPDF.as_view(), name='upload-filled-pdf'),
-    path('onboarding/forms/<int:pk>/', api_views.ProviderFormDetail.as_view(), name='provider-form-detail'),
-    path('onboarding/forms/blank/<str:form_type>/', api_views.serve_blank_form, name='serve-blank-form'),
+    path('forms/', api_views.ProviderFormListCreate.as_view(), name='provider-form-list'),
+    path('forms/fill/', api_views.FillPreexistingPDF.as_view(), name='provider-form-list'),
+    path('forms/upload/', api_views.UploadFilledPDF.as_view(), name='upload-filled-pdf'),
+    path('forms/<int:pk>/', api_views.ProviderFormDetail.as_view(), name='provider-form-detail'),
+    path('forms/blank/<str:form_type>/', api_views.serve_blank_form, name='serve-blank-form'),
+    
     # Provider Documents
-    path('onboarding/documents/', api_views.ProviderDocumentListCreate.as_view(), name='provider-document-list'),
-    path('onboarding/documents/<int:pk>/', api_views.ProviderDocumentDetail.as_view(), name='provider-document-detail'),
+    path('documents/', api_views.ProviderDocumentListCreate.as_view(), name='provider-document-list'),
+    path('documents/<int:pk>/', api_views.ProviderDocumentDetail.as_view(), name='provider-document-detail'),
+    
+    # New URLs for prepopulating forms
+    path('forms/prepopulate/', api_views.ServeFilledPDFOnTheFly.as_view(), name='prepopulate-form'),
+    path('forms/prepopulate-data/', api_views.GetPrepopulatedFormData.as_view(), name='get-prepopulated-data'),
+    path('forms/prepopulate-and-serve/', api_views.PrepopulateAndServeWithUserData.as_view(), name='prepopulate-and-serve'),
+    
+    # Create SSL for blob storage
+    path('forms/sas-url/<str:blob_name>/', api_views.GenerateSASURLView.as_view(), name='get_pdf_sas_url'),
+    path('forms/serve/<str:blob_name>/', api_views.ServePDFFromAzure.as_view(), name='serve-pdf'), 
 ]

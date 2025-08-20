@@ -2,10 +2,12 @@ from django.db import models
 from django.conf import settings
 from provider_auth.models import User
 from patients.models import Patient
+from django.utils.text import slugify
 
 def provider_upload_path(instance, filename):
-    return f'providers/{instance.user.id}/{filename}'
-
+    provider_name = slugify(instance.user.full_name)
+    patient_name = slugify(instance.patient.full_name) if instance.patient else "unknown-patient"
+    return f'providers/{provider_name}/{patient_name}/{filename}'
 class ProviderForm(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='forms')
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='forms', null=True, blank=True)

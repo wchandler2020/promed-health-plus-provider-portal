@@ -33,7 +33,9 @@ urlpatterns = [
     path('api/v1/', include('provider_auth.urls')),
     path('api/v1/', include('notes.urls')),
     path('api/v1/patient/', include('patients.urls')),
-    path('api/v1/', include('onboarding_ops.urls')),
+    
+   # Onboarding Docs
+    path('api/v1/onboarding/', include('onboarding_ops.urls')),
 ]
 
 # Serve media and static files in development
