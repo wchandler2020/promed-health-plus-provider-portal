@@ -98,7 +98,7 @@ const ContactRepModal = ({ open, onClose }) => {
 
           {/* Header */}
           <h2 className="text-3xl font-bold text-center text-gray-800 mb-2">
-            Speak to Your Rep
+            Contact Your Rep
           </h2>
           <p className="text-center text-gray-500 mb-6">
             Fill out the form, and a representative will respond within 2–3 hours.

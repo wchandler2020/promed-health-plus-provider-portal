@@ -3,7 +3,7 @@ import { AuthContext } from "../../utils/auth";
 import { useNavigate } from "react-router-dom";
 import bg_image from "../../assets/images/bg_image_01.jpg";
 import { Link } from "react-router-dom";
-import { IoArrowBack } from "react-icons/io5";
+import { IoArrowBack, IoCheckmarkCircleOutline } from "react-icons/io5";
 
 const Register = () => {
   const { register } = useContext(AuthContext);
@@ -16,6 +16,13 @@ const Register = () => {
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const navigate = useNavigate();
+
+  // Validation functions
+  const hasMinLength = password.length >= 12;
+  const hasUppercase = (password.match(/[A-Z]/g) || []).length >= 2;
+  const hasLowercase = (password.match(/[a-z]/g) || []).length >= 2;
+  const hasNumbers = (password.match(/[0-9]/g) || []).length >= 2;
+  const hasSpecialChars = (password.match(/[^A-Za-z0-9]/g) || []).length >= 2;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -86,7 +93,9 @@ const Register = () => {
               <h2 className="text-4xl font-bold text-center text-gray-700 dark:text-white">
                 Brand
               </h2>
-              <p className="mt-3 text-gray-900 text-xl font-bold">Create your account</p>
+              <p className="mt-3 text-gray-900 text-xl font-bold">
+                Create your account
+              </p>
             </div>
 
             <div className="mt-8">
@@ -143,6 +152,70 @@ const Register = () => {
                     className="block w-full px-4 py-2 mt-2 text-gray-700 placeholder-gray-400 bg-white border border-gray-200 rounded-md dark:bg-white dark:text-gray-300 dark:border-gray-700 focus:border-blue-400 focus:ring focus:ring-blue-400 focus:outline-none focus:ring-opacity-40"
                     required
                   />
+                  <div className="mt-2 text-sm">
+                    <ul className="list-disc list-inside text-gray-500">
+                      <li
+                        className={
+                          hasMinLength
+                            ? "text-green-600 flex items-center"
+                            : "flex items-center"
+                        }
+                      >
+                        {hasMinLength && (
+                          <IoCheckmarkCircleOutline className="mr-1 text-green-600" />
+                        )}
+                        Minimum 12 characters
+                      </li>
+                      <li
+                        className={
+                          hasUppercase
+                            ? "text-green-600 flex items-center"
+                            : "flex items-center"
+                        }
+                      >
+                        {hasUppercase && (
+                          <IoCheckmarkCircleOutline className="mr-1 text-green-600" />
+                        )}
+                        At least two uppercase letters
+                      </li>
+                      <li
+                        className={
+                          hasLowercase
+                            ? "text-green-600 flex items-center"
+                            : "flex items-center"
+                        }
+                      >
+                        {hasLowercase && (
+                          <IoCheckmarkCircleOutline className="mr-1 text-green-600" />
+                        )}
+                        At least two lowercase letters
+                      </li>
+                      <li
+                        className={
+                          hasNumbers
+                            ? "text-green-600 flex items-center"
+                            : "flex items-center"
+                        }
+                      >
+                        {hasNumbers && (
+                          <IoCheckmarkCircleOutline className="mr-1 text-green-600" />
+                        )}
+                        At least two numbers
+                      </li>
+                      <li
+                        className={
+                          hasSpecialChars
+                            ? "text-green-600 flex items-center"
+                            : "flex items-center"
+                        }
+                      >
+                        {hasSpecialChars && (
+                          <IoCheckmarkCircleOutline className="mr-1 text-green-600" />
+                        )}
+                        At least two special characters
+                      </li>
+                    </ul>
+                  </div>
                 </div>
 
                 <div className="mt-4">
@@ -181,7 +254,7 @@ const Register = () => {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full px-4 py-2 tracking-wide text-white transition-colors duration-200 transform bg-blue-500 rounded-md hover:bg-blue-400 focus:outline-none focus:bg-blue-400 focus:ring focus:ring-blue-300 focus:ring-opacity-50"
+                    className="w-full px-4 py-2 tracking-wide text-white transition-colors duration-200 transform bg-emerald-500 rounded-md hover:bg-emerald-400 focus:outline-none focus:bg-emerald-500 focus:ring focus:ring-emerald-500 focus:ring-opacity-50"
                   >
                     {isLoading ? "Registering..." : "Register"}
                   </button>
@@ -199,7 +272,7 @@ const Register = () => {
                 Already have an account?{" "}
                 <a
                   href="/login"
-                  className="text-blue-500 focus:outline-none focus:underline hover:underline"
+                  className="text-emerald-500 focus:outline-none focus:underline hover:underline"
                 >
                   Log in
                 </a>
