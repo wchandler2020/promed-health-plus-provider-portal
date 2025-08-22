@@ -1,13 +1,26 @@
 from django.db import models
 from django.conf import settings
 from provider_auth.models import User
+from datetime import datetime
 from patients.models import Patient
+from django.utils.text import slugify
+from promed_backend_api.storage_backends import AzureMediaStorage
+# from utils.azure_storage import get_form_upload_path
+
+import os
 from django.utils.text import slugify
 
 def provider_upload_path(instance, filename):
-    provider_name = slugify(instance.user.full_name)
-    patient_name = slugify(instance.patient.full_name) if instance.patient else "unknown-patient"
-    return f'providers/{provider_name}/{patient_name}/{filename}'
+    now = datetime.now()
+    timestamp = now.strftime('%m_%Y_%H-%M-%S')
+    provider_name = slugify(getattr(instance.user, 'full_name', 'unknown-provider') or 'unknown-provider')
+    patient_name = slugify(getattr(instance.patient, 'full_name', 'unknown-patient') or 'unknown-patient')
+    # Ensure filename is safe
+    base, ext = os.path.splitext(filename or 'file.pdf')
+    safe_filename = f"{patient_name}_{timestamp}_{slugify(base)}{ext}"
+
+    return f'providers/{provider_name}/{patient_name}/{safe_filename}'
+
 class ProviderForm(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='forms')
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='forms', null=True, blank=True)

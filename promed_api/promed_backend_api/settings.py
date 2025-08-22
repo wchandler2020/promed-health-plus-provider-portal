@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import os
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
-
+import dj_database_url
 
 load_dotenv()
 sentry_sdk.init(
@@ -13,12 +13,6 @@ sentry_sdk.init(
     traces_sample_rate=1.0,  # Set lower in production (e.g., 0.1)
     send_default_pii=True    # Sends user info if available
 )
-# sentry_sdk.init(
-#     dsn="https://e8b8032c2344202bda64fc938e4dc5db@o4509803038113792.ingest.us.sentry.io/4509803039031296",
-#     # Add data like request headers and IP for users,
-#     # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-#     send_default_pii=True,
-# )
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -26,7 +20,8 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['.onrender.com']
 
 USER_APPS = [
     'provider_auth.apps.ProviderAuthConfig',
@@ -61,6 +56,7 @@ INSTALLED_APPS = THIRD_PARTY_APPS + DJANGO_APPS + USER_APPS
 CORS_ALLOW_ALL_ORIGINS = True
 
 MIDDLEWARE = [
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     'django.middleware.security.SecurityMiddleware',
@@ -91,15 +87,23 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'promed_backend_api.wsgi.application'
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': os.getenv('DB_NAME'),
+#         'USER': os.getenv('DB_USER'),
+#         'PASSWORD': os.getenv('DB_PASSWORD'),
+#         'HOST': 'localhost',
+#         'PORT': '5432',
+#     }
+# }
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
+    'default': dj_database_url.config(
+        default=os.getenv('NEON_DB_CONN_STRING'),
+        conn_max_age=600,
+        ssl_require=True
+    )
 }
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -122,13 +126,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-
-STATIC_URL = 'static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-STATIC_ROOT = os.path.join(BASE_DIR, 'templates')
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -222,6 +219,7 @@ JAZZMIN_UI_TWEAKS = {
     }
 }
 
+
 ## EMAIL CONFIGURATIONS
 EMAIL_BACKEND = 'anymail.backends.sendgrid.EmailBackend'
 
@@ -234,18 +232,19 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = 'vastyle2010@gmail.com'
 
-# Add Azure storage configuration
-DEFAULT_FILE_STORAGE = 'yourproject.storage_backends.AzureMediaStorage'
+STATIC_URL = 'static/'
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+DEFAULT_FILE_STORAGE = 'promed_backend_api.storage_backends.AzureMediaStorage'
+STATICFILES_STORAGE = 'promed_backend_api.storage_backends.AzureStaticStorage'
+
 AZURE_ACCOUNT_NAME = os.getenv('AZURE_ACCOUNT_NAME')
 AZURE_ACCOUNT_KEY = os.getenv('AZURE_ACCOUNT_KEY')
-AZURE_CONTAINER = os.getenv('AZURE_CONTAINER')  # e.g., "media"
+AZURE_CONTAINER = os.getenv('AZURE_CONTAINER')
 AZURE_CUSTOM_DOMAIN = f'{AZURE_ACCOUNT_NAME}.blob.core.windows.net'
 AZURE_CONNECTION_STRING = os.getenv("AZURE_CONNECTION_STRING")
-
 MEDIA_URL = f'https://{AZURE_CUSTOM_DOMAIN}/{AZURE_CONTAINER}/'
 
-
-# ... rest of your settings
-TWILIO_VERIFY_SERVICE_SID = 'VA0ef166324756821f432fe9a3bf03ef57'  # Replace with your actual Twilio Verify Service SID
+TWILIO_VERIFY_SERVICE_SID = 'VA0ef166324756821f432fe9a3bf03ef57'  
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'

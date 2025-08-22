@@ -101,21 +101,33 @@ def serve_blank_form(request, form_type):
         return FileResponse(pdf_stream, content_type='application/pdf')
     except FileNotFoundError:
         return HttpResponseNotFound("Template not found in Azure.")
-
-# Generate signed URL for Azure blob
+    
 class GenerateSASURLView(generics.RetrieveAPIView):
     permission_classes = [permissions.IsAuthenticated]
     lookup_url_kwarg = 'blob_name'
 
     def retrieve(self, request, *args, **kwargs):
+        # Capture the blob_name and container_name from the URL
         blob_name = kwargs.get(self.lookup_url_kwarg)
-        if not blob_name:
-            raise NotFound("Blob name not provided.")
+        container_name = kwargs.get('container_name')
+
+        # Strip any trailing slashes from the blob_name.
+        # This is a crucial step to ensure the name matches the blob in Azure.
+        if blob_name and blob_name.endswith('/'):
+            blob_name = blob_name.rstrip('/')
+        
+        if not blob_name or not container_name:
+            raise NotFound("Container name or blob name not provided.")
 
         try:
-            sas_url = generate_sas_url(blob_name)
+            # Pass the corrected blob_name and container_name to the utility function
+            sas_url = generate_sas_url(blob_name, container_name)
             return Response({"sas_url": sas_url})
+        except FileNotFoundError:
+            # Return a 404 for a specific "file not found" case
+            return Response({"error": f"Blob '{blob_name}' not found in container '{container_name}'"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
+            # Catch other potential errors and return a 500
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 # Stream PDF directly from Azure blob using SAS
@@ -307,3 +319,19 @@ class GetPrepopulatedFormData(APIView):
         }
         
         return Response(default_form_data, status=status.HTTP_200_OK)
+
+class CheckBlobExistsView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, container_name, blob_name, *args, **kwargs):
+        try:
+            blob_service_client = BlobServiceClient.from_connection_string(settings.AZURE_CONNECTION_STRING)
+            container_client = blob_service_client.get_container_client(container_name)
+            blob_client = container_client.get_blob_client(blob_name)
+            
+            exists = blob_client.exists()
+            return Response({"exists": exists}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+

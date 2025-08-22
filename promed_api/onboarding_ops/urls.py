@@ -20,6 +20,8 @@ urlpatterns = [
     path('forms/prepopulate-and-serve/', api_views.PrepopulateAndServeWithUserData.as_view(), name='prepopulate-and-serve'),
     
     # Create SSL for blob storage
-    path('forms/sas-url/<str:blob_name>/', api_views.GenerateSASURLView.as_view(), name='get_pdf_sas_url'),
+    # path('forms/sas-url/<str:blob_name>/', api_views.GenerateSASURLView.as_view(), name='get_pdf_sas_url'),
+    path('forms/sas-url/<str:container_name>/<path:blob_name>/', api_views.GenerateSASURLView.as_view(), name='generate-sas-url'),
     path('forms/serve/<str:blob_name>/', api_views.ServePDFFromAzure.as_view(), name='serve-pdf'), 
+    path('forms/check-blob/<str:container_name>/<path:blob_name>/', api_views.CheckBlobExistsView.as_view(), name='check-blob-exists'),
 ]

@@ -5,10 +5,11 @@ from django.conf import settings
 import uuid, os
 from django.core.files.base import File
 from patients.models import Patient
-from .models import ProviderForm
+from .models import ProviderForm, provider_upload_path
 from io import BytesIO
 from datetime import datetime
-
+from azure.storage.blob import BlobServiceClient
+from django.core.files.storage import default_storage
 class ProviderFormSerializer(serializers.ModelSerializer):
     class Meta:
         model = api_models.ProviderForm
@@ -24,12 +25,12 @@ class ProviderDocumentSerializer(serializers.ModelSerializer):
     def get_file_url(self, obj):
         request = self.context.get('request')
         return request.build_absolute_uri(obj.file.url) if obj.file else None
+    
 class ProviderFormFillSerializer(serializers.Serializer):
     patient_id = serializers.IntegerField(write_only=True)
     form_type = serializers.CharField(write_only=True)
     form_data = serializers.DictField(write_only=True, required=False)
-    completed_form_url = serializers.CharField(read_only=True)
-
+    
     def create(self, validated_data):
         request = self.context.get('request')
         user = request.user
@@ -42,57 +43,51 @@ class ProviderFormFillSerializer(serializers.Serializer):
         except Patient.DoesNotExist:
             raise serializers.ValidationError({"error": "Patient not found or unauthorized."})
 
+        # Pre-populate your default data here
         default_form_data = {
-            'Provider Name': user.full_name,
-            'Text38': user.email,
-            'Text56': patient.address,
-            'Text59': str(patient.date_of_birth),
-            'Text57': str(patient.phone_number),
-            'Text62': patient.primary_insurance,
-            'Text63': patient.primary_insurance_number,
-            'Text65': patient.secondary_insurance,
-            'Text66': patient.secondary_insurance_number,
-            'PATIENT ADDRESS': patient.address,
-            'Text60': f'{patient.city}, {patient.state} {patient.zip_code}',
-            'PATIENT PHONE': str(patient.phone_number),
-            'PATIENT FAX/EMAIL': patient.email,
+            # ... (your existing default data) ...
         }
-
         form_data = {**default_form_data, **incoming_form_data}
-        filename = (
-            f"{user.full_name}/{patient.full_name}/"
-            f"{uuid.uuid4()}_{form_type}_filled_{patient.first_name}_{patient.last_name}_{datetime.today().strftime('%m-%d-%Y')}.pdf"
-        )
-        
-        output_buffer = BytesIO()
+        now = datetime.now()
+        timestamp = now.strftime('%m_%Y_%H-%M-%S')
 
+        filename = f"{patient.first_name}_{patient.last_name}_{timestamp}_ivr_report.pdf"
+
+        output_buffer = BytesIO()
         try:
             fill_pdf(form_type, form_data, output_buffer)
             output_buffer.seek(0)
         except Exception as e:
             raise serializers.ValidationError({"error": f"PDF generation failed: {str(e)}"})
 
+        # --- CRITICAL FIX START ---
+        # 1. Create and save the model instance to the database first.
         provider_form = ProviderForm.objects.create(
             user=user,
             patient=patient,
             form_type=form_type,
-            completed_form=File(output_buffer, name=filename),
             completed=True,
             form_data=form_data
         )
-
+        print("DEBUG: ProviderForm instance created, attempting to save file.")
+        try:
+            provider_form.completed_form.save(filename, File(output_buffer, name=filename))
+            print("DEBUG: File save successful. It should be in Azure.")
+        except Exception as e:
+            print(f"DEBUG: File save failed: {e}")
+            provider_form.delete() 
+            raise serializers.ValidationError({"error": f"Azure upload failed: {str(e)}"})
+    
         return provider_form
 
     def to_representation(self, instance):
-        request = self.context.get('request')
         full_blob_path = instance.completed_form.name
-
         return {
             'form_id': instance.id,
-            'completed_form_url': request.build_absolute_uri(f"/api/v1/forms/serve/{full_blob_path}"),
+            'completed_form_url': instance.completed_form.url,
+            'completed_form_blob_path': full_blob_path,
             'form_data': instance.form_data,
         }
-
 class ProviderFormUploadPDFSerializer(serializers.ModelSerializer):
     class Meta:
         model = api_models.ProviderForm

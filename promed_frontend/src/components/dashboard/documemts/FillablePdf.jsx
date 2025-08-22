@@ -1,5 +1,3 @@
-
-// Corrected FillablePdf.jsx
 import React, { useState, useEffect } from "react";
 import authRequest from "../../../utils/axios";
 import toast from "react-hot-toast";
@@ -11,10 +9,9 @@ const FillablePdf = ({ selectedPatientId }) => {
   const [showEditor, setShowEditor] = useState(false);
   const [loading, setLoading] = useState(true);
 
- // Extract blob name from URL for SAS requests
   const getBlobNameFromUrl = (url) => {
-    const parts = url.split("/").filter(Boolean);
-    return parts[parts.length - 1];
+    const match = url.match(/\/[^\/]+\/(.+)$/);
+    return match ? match[1] : null;
   };
 
   const handleSavePatientIVR = async () => {
@@ -22,7 +19,6 @@ const FillablePdf = ({ selectedPatientId }) => {
       toast.error("No patient selected.");
       return;
     }
-
     try {
       const axiosInstance = authRequest();
       const response = await axiosInstance.post("/onboarding/forms/fill/", {
@@ -30,24 +26,42 @@ const FillablePdf = ({ selectedPatientId }) => {
         form_type: "IVR_FORM",
         form_data: formData || {},
       });
+      const newBlobPath = response.data.completed_form_blob_path;
+      // Polling loop to wait for the blob to exist
+      const pollInterval = setInterval(async () => {
+        try {
+          const axiosInstance = authRequest();
+          const containerName = "media";
+          // const cleanedBlobPath = newBlobPath.replace(/^providers\//, ""); // strip 'providers/' if present
+          const encodedBlobName = encodeURIComponent(newBlobPath);
 
-      const newUrl = response.data.completed_form_url;
-      const blobName = getBlobNameFromUrl(newUrl);
-      const sasUrl = await fetchSasUrl(blobName);
+          const statusRes = await axiosInstance.get(
+            `/onboarding/forms/check-blob/${containerName}/${encodedBlobName}/`
+          );
 
-      setPdfUrl(sasUrl);
-      toast.success("Patient IVR form saved to cloud!");
+          if (statusRes.data.exists) {
+            clearInterval(pollInterval);
+           const sasUrl = await fetchSasUrl(containerName, encodedBlobName);
+            setPdfUrl(sasUrl);
+            toast.success("Patient IVR form saved to cloud!");
+          }
+        } catch (error) {
+          console.error("Polling for blob failed:", error);
+        }
+      }, 3000);
     } catch (error) {
       console.error("Failed to save form:", error);
       toast.error("Error saving form.");
     }
   };
-
-  // Fetch secure SAS URL for blob access
   const fetchSasUrl = async (blobName) => {
     try {
       const axiosInstance = authRequest();
-      const res = await axiosInstance.get(`/forms/sas-url/${blobName}/`);
+      // The URL needs a trailing slash to match the Django pattern.
+      // The blobName itself should NOT have a trailing slash.
+      const res = await axiosInstance.get(
+        `/onboarding/forms/sas-url/${blobName}/`
+      );
       return res.data.sas_url;
     } catch (error) {
       console.error("Failed to fetch SAS URL:", error);
@@ -56,9 +70,7 @@ const FillablePdf = ({ selectedPatientId }) => {
     }
   };
 
-  // Load blank form PDF served locally
   const loadBlankPdf = () => {
-    // Adjust this URL to match your blank form endpoint and form type
     const blankPdfUrl = `${process.env.REACT_APP_API_URL}/onboarding/forms/blank/IVR_FORM/`;
     setPdfUrl(blankPdfUrl);
     setFormData(null);
@@ -74,8 +86,6 @@ const FillablePdf = ({ selectedPatientId }) => {
     setLoading(true);
     try {
       const axiosInstance = authRequest();
-
-      // Step 1: Fetch the pre-populated form data
       const dataResponse = await axiosInstance.get(
         `/onboarding/forms/prepopulate-data/`,
         {
@@ -85,9 +95,7 @@ const FillablePdf = ({ selectedPatientId }) => {
           },
         }
       );
-      setFormData(dataResponse.data); // Set the form data state
-
-      // Step 2: Fetch the PDF blob
+      setFormData(dataResponse.data);
       const pdfResponse = await axiosInstance.get(
         `/onboarding/forms/prepopulate/`,
         {
@@ -111,13 +119,8 @@ const FillablePdf = ({ selectedPatientId }) => {
     }
   };
   const handleEditorSuccess = async (newPdfUrl, updatedData) => {
-    // 1. Update the formData state with the changes from the modal
     setFormData(updatedData);
-
-    // 2. Set the new PDF URL for the iframe preview
     setPdfUrl(newPdfUrl);
-    
-    // 3. We can now stop loading and close the modal
     setLoading(false);
     setShowEditor(false);
     toast.success("PDF preview re-generated successfully!");
