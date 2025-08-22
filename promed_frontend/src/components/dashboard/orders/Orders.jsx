@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import default_item from "../../../assets/images/default_item.png";
 import {
   Dialog,
@@ -8,7 +8,8 @@ import {
   Button,
   TextField,
 } from "@mui/material";
-
+import Tasks from "../tasks/Tasks";
+import { AuthContext } from "../../../utils/auth";
 const itemsData = [
   {
     id: 1,
@@ -140,13 +141,16 @@ const OrderHistory = ({ orders, onReturn }) => (
 );
 
 const Orders = () => {
+  const { user } = useContext(AuthContext);
+  console.log("AuthContext user:", user);
+  const providerId = user?.id;
+  console.log("Provider ID:", providerId);
   const [quantities, setQuantities] = useState(
     itemsData.reduce((acc, item) => {
       acc[item.id] = 0;
       return acc;
     }, {})
   );
-
   const [orderHistory, setOrderHistory] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
@@ -300,6 +304,7 @@ const Orders = () => {
       </Dialog>
 
       <OrderHistory orders={orderHistory} onReturn={handleReturn} />
+      <Tasks />
     </div>
   );
 };

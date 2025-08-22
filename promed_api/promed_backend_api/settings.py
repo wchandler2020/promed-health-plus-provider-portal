@@ -34,6 +34,8 @@ USER_APPS = [
     'patients.apps.PatientsConfig',
     'sales_rep.apps.SalesRepConfig',
     'notes.apps.NotesConfig',
+    'tasks.apps.TasksConfig',
+    'templatetags',
 ]
 
 THIRD_PARTY_APPS = [
@@ -53,7 +55,7 @@ DJANGO_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
+    'django.contrib.staticfiles',    
 ]
 
 INSTALLED_APPS = THIRD_PARTY_APPS + DJANGO_APPS + USER_APPS
