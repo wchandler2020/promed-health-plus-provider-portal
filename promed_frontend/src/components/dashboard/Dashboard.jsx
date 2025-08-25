@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Navbar from "../navbar/Navbar";
 import Orders from "./orders/Orders";
+import Tasks from "./tasks/Tasks";
 import Documents from "./documemts/Documents";
 import Patients from "./patient/Patient";
 import { IoChatbubblesOutline } from "react-icons/io5";
@@ -32,6 +33,7 @@ const Dashboard = () => {
         </div>
         <div className="h-full">
           <Documents />
+          <Tasks />
         </div>
         <div className="h-full">
           <Orders />

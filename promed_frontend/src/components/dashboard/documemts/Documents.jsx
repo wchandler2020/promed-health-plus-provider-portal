@@ -5,6 +5,7 @@ import axios from "axios";
 import { Uploader } from "uploader";
 import { UploadDropzone } from "react-uploader";
 
+
 // Uploader instance (replace `free` with your real API key if needed)
 const uploader = Uploader({ apiKey: "public_kW2K8TM64y42BDQ65N3rMp87ZJPd" });
 
