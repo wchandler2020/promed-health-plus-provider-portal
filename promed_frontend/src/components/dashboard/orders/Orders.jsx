@@ -141,10 +141,6 @@ const OrderHistory = ({ orders, onReturn }) => (
 );
 
 const Orders = () => {
-  const { user } = useContext(AuthContext);
-  console.log("AuthContext user:", user);
-  const providerId = user?.id;
-  console.log("Provider ID:", providerId);
   const [quantities, setQuantities] = useState(
     itemsData.reduce((acc, item) => {
       acc[item.id] = 0;
@@ -304,7 +300,6 @@ const Orders = () => {
       </Dialog>
 
       <OrderHistory orders={orderHistory} onReturn={handleReturn} />
-      <Tasks />
     </div>
   );
 };
