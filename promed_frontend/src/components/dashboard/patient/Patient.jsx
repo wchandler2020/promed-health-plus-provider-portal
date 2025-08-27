@@ -272,7 +272,7 @@ const Patients = () => {
     fetchPatients();
   }, [getPatients]);
 
-  useEffect(() =>{
+  useEffect(() => {
     if (searchTerm || ivrFilter) {
       // Save the current page if filtering
       setSavePage(currentPage);
@@ -285,7 +285,10 @@ const Patients = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: name === "middle_initial" ? value.trim().charAt(0) : value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "middle_initial" ? value.trim().charAt(0) : value,
+    }));
   };
 
   const handleAddPatient = async () => {
@@ -333,7 +336,7 @@ const Patients = () => {
     const matchesFilter = ivrFilter ? patient.ivrStatus === ivrFilter : true;
     return (
       (fullName.includes(searchTerm.toLowerCase()) ||
-      medRecord.includes(searchTerm.toLowerCase())) &&
+        medRecord.includes(searchTerm.toLowerCase())) &&
       matchesFilter
     );
   });
@@ -346,10 +349,12 @@ const Patients = () => {
   // Pagination logic
   const indexOfLastPatient = currentPage * patientsPerPage;
   const indexOfFirstPatient = indexOfLastPatient - patientsPerPage;
-  const currentPatients = sortedPatients.slice(indexOfFirstPatient, indexOfLastPatient);
+  const currentPatients = sortedPatients.slice(
+    indexOfFirstPatient,
+    indexOfLastPatient
+  );
 
   const totalPages = Math.ceil(sortedPatients.length / patientsPerPage);
-
 
   const handleViewPdf = (patient) => {
     setSelectedPatient(patient);
@@ -391,23 +396,49 @@ const Patients = () => {
           <FaSearch />
         </div>
       </div>
-      <div className="flex items-center mb-5">
-        <label htmlFor="ivr-filter" className="mr-2 text-sm font-medium">Filter by IVR Status:</label>
-          <select id="ivr-filter" value={ivrFilter} onChange={e => setIvrFilter(e.target.value)} className="border border-gray-300 rounded px-2 py-1 text-sm">
-            <option value="">All</option>
-            <option value="Approved">Approved</option>
-            <option value="Pending">Pending</option>
-            <option value="Denied">Denied</option>
-          </select>
+      <div className="flex items-center mb-5 pl-1">
+        <label
+          htmlFor="ivr-filter"
+          className="mr-2 text-xs font-medium text-gray-700"
+        >
+          Filter by IVR Status:
+        </label>
+        <select
+          id="ivr-filter"
+          value={ivrFilter}
+          onChange={(e) => setIvrFilter(e.target.value)}
+          className="bg-gray-100 text-gray-800 border border-gray-300 rounded px-2 py-1 text-xs 
+             focus:bg-gray-200 focus:outline-none focus:ring-2 
+             focus:ring-emerald-500 focus:border-emerald-300 transition"
+        >
+          <option value="">All</option>
+          <option value="Approved">Approved</option>
+          <option value="Pending">Pending</option>
+          <option value="Denied">Denied</option>
+        </select>
+
         <div className="ml-auto flex items-center">
-          <label htmlFor="patients-per-page" className="mr-2 text-sm font-medium">Patient per page:</label>
-          <select id="patients-per-page" value={patientsPerPage} onChange={e => {
-            setPatientsPerPage(Number (e.target.value));
-            setCurrentPage(1);
-          }}
-          className="border border-gray-300 rounded px-2 py-1 text-sm" >
-            {[5,10,15,25].map(num => (
-              <option key={num} value={num}>{num}</option>
+          <label
+            htmlFor="patients-per-page"
+            className="mr-2 text-xs font-medium text-gray-700"
+          >
+            Patient per page:
+          </label>
+          <select
+            id="patients-per-page"
+            value={patientsPerPage}
+            onChange={(e) => {
+              setPatientsPerPage(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            className="bg-gray-100 text-gray-800 border border-gray-300 rounded px-2 py-1 text-xs 
+             focus:bg-gray-200 focus:outline-none focus:ring-2 
+             focus:ring-emerald-500 focus:border-emerald-300 transition"
+          >
+            {[5, 10, 15, 25].map((num) => (
+              <option key={num} value={num}>
+                {num}
+              </option>
             ))}
           </select>
         </div>
@@ -415,7 +446,7 @@ const Patients = () => {
 
       <div className="space-y-6">
         {currentPatients.map((patient) => (
-          <PatientCard 
+          <PatientCard
             key={patient.id}
             patient={patient}
             onViewPdf={handleViewPdf}
@@ -423,13 +454,25 @@ const Patients = () => {
         ))}
       </div>
       <div className="flex justify-center items-center mt-6 space-x-2">
-        <button onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+        <button
+          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
           disabled={currentPage === 1}
-          className="px-3 py-1 rounded border bg-gray-100 disabled:opacity-50">Prev</button>
-        <span className="mx-2 text-sm">Page {currentPage} of {totalPages}</span>
-        <button onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-        disabled={currentPage === totalPages}
-        className="px-3 py-1 rounded border bg-gray-100 disabled:opacity-50">Next</button>
+          className="px-3 py-1 rounded border bg-gray-100 disabled:opacity-50"
+        >
+          Prev
+        </button>
+        <span className="mx-2 text-sm">
+          Page {currentPage} of {totalPages}
+        </span>
+        <button
+          onClick={() =>
+            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+          }
+          disabled={currentPage === totalPages}
+          className="px-3 py-1 rounded border bg-gray-100 disabled:opacity-50"
+        >
+          Next
+        </button>
       </div>
 
       <Modal open={open} onClose={() => setOpen(false)}>
@@ -640,7 +683,7 @@ const Patients = () => {
               {/* Submit button */}
               <button
                 type="submit"
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition duration-300"
+                className="w-full bg-emerald-400 hover:bg-emerald-500 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition duration-300"
               >
                 Save Patient
               </button>

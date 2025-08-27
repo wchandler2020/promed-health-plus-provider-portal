@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import os
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
-
+import dj_database_url
 
 load_dotenv()
 sentry_sdk.init(
@@ -13,12 +13,6 @@ sentry_sdk.init(
     traces_sample_rate=1.0,  # Set lower in production (e.g., 0.1)
     send_default_pii=True    # Sends user info if available
 )
-# sentry_sdk.init(
-#     dsn="https://e8b8032c2344202bda64fc938e4dc5db@o4509803038113792.ingest.us.sentry.io/4509803039031296",
-#     # Add data like request headers and IP for users,
-#     # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-#     send_default_pii=True,
-# )
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -26,7 +20,8 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['.onrender.com']
 
 USER_APPS = [
     'provider_auth.apps.ProviderAuthConfig',
@@ -63,6 +58,7 @@ INSTALLED_APPS = THIRD_PARTY_APPS + DJANGO_APPS + USER_APPS
 CORS_ALLOW_ALL_ORIGINS = True
 
 MIDDLEWARE = [
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     'django.middleware.security.SecurityMiddleware',
@@ -93,32 +89,24 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'promed_backend_api.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': os.getenv('DB_NAME'),
+#         'USER': os.getenv('DB_USER'),
+#         'PASSWORD': os.getenv('DB_PASSWORD'),
+#         'HOST': 'localhost',
+#         'PORT': '5432',
+#     }
+# }
 
-# AUTH_PASSWORD_VALIDATORS = [
-#     {
-#         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-#     },
-#     {
-#         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-#         'OPTIONS': {'min_length': 12},  # HIPAA best practice
-#     },
-#     {
-#         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-#     },
-#     {
-#         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-#     },
-# ]
+DATABASES = {
+    'default': dj_database_url.config(
+        default=os.getenv('NEON_DB_CONN_STRING'),
+        conn_max_age=600,
+        ssl_require=True
+    )
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -141,13 +129,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-STATIC_URL = 'static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-STATIC_ROOT = os.path.join(BASE_DIR, 'templates')
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',  # Optional
@@ -156,12 +137,6 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
-    # 'DEFAULT_THROTTLE_CLASSES': [
-    #     'rest_framework.throttling.UserRateThrottle',
-    # ],
-    # 'DEFAULT_THROTTLE_RATES': {
-    #     'user': '5/minute',  # limit to 5 requests per minute per user
-    # }
 }
 
 AUTH_USER_MODEL = 'provider_auth.User'
@@ -246,6 +221,7 @@ JAZZMIN_UI_TWEAKS = {
     }
 }
 
+
 ## EMAIL CONFIGURATIONS
 EMAIL_BACKEND = 'anymail.backends.sendgrid.EmailBackend'
 
@@ -258,28 +234,19 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = 'vastyle2010@gmail.com'
 
-## AMAZON S3 settings:
+STATIC_URL = 'static/'
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+DEFAULT_FILE_STORAGE = 'promed_backend_api.storage_backends.AzureMediaStorage'
+STATICFILES_STORAGE = 'promed_backend_api.storage_backends.AzureStaticStorage'
 
-# AWS S3 Settings (assuming you've got these from your AWS console)
-AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
-AWS_S3_SIGNATURE_NAME = os.getenv('AWS_S3_SIGNATURE_NAME')
-AWS_S3_REGION_NAME = 'us-east-2' # e.g., 'us-east-1', 'eu-west-2'
+AZURE_ACCOUNT_NAME = os.getenv('AZURE_ACCOUNT_NAME')
+AZURE_ACCOUNT_KEY = os.getenv('AZURE_ACCOUNT_KEY')
+AZURE_CONTAINER = os.getenv('AZURE_CONTAINER')
+AZURE_CUSTOM_DOMAIN = f'{AZURE_ACCOUNT_NAME}.blob.core.windows.net'
+AZURE_CONNECTION_STRING = os.getenv("AZURE_CONNECTION_STRING")
+MEDIA_URL = f'https://{AZURE_CUSTOM_DOMAIN}/{AZURE_CONTAINER}/'
 
-AWS_S3_FILE_OVERWRITE = False # Prevents overwriting files with the same name
-AWS_QUERYSTRING_AUTH = False # For more secure, clean URLs for public files, or disable if all files are private
-AWS_DEFAULT_ACL = None # Recommended: let bucket policies manage access. If you need public files, use 'public-read' (e.g., for user profile pics, but not for HIPAA data).
-AWS_S3_VERITY = True
-# Default File Storage (important!)
-# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-
-# If you also have static files on S3 (optional)
-STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-# STATIC_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/static/'
-# MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/media/'
-
-# ... rest of your settings
-TWILIO_VERIFY_SERVICE_SID = 'VA0ef166324756821f432fe9a3bf03ef57'  # Replace with your actual Twilio Verify Service SID
+TWILIO_VERIFY_SERVICE_SID = 'VA0ef166324756821f432fe9a3bf03ef57'  
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'

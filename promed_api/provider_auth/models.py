@@ -36,6 +36,10 @@ class User(AbstractUser):
 
     def __str__(self) -> str:
         return f'{self.email} | {self.date_joined}'
+    
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}".strip()
 
     def save(self, *args, **kwargs):
         if not self.username: # Check if username is truly empty/None
