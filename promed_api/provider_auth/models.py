@@ -5,6 +5,7 @@ from django.conf import settings
 from django.utils import timezone
 from sales_rep.models import SalesRep
 import random
+import uuid
 
 verification_methods = (
     ('email', 'Email'), ('sms', 'SMS')
@@ -44,8 +45,8 @@ class User(AbstractUser):
     def save(self, *args, **kwargs):
         if not self.username: # Check if username is truly empty/None
             self.username = self.email.split('@')[0] if '@' in self.email else self.email
-        if not self.full_name: 
-            self.full_name = self.username
+        # if not self.full_name: 
+        #     self.full_name = self.username
         super().save(*args, **kwargs)
 
 class Profile(models.Model):
@@ -96,5 +97,10 @@ class Verification_Code(models.Model):
         return timezone.now() > self.created_at + timezone.timedelta(minutes=10)
 
         
+class PasswordResetToken(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    token = models.UUIDField(default=uuid.uuid4, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
 
-
+    def is_expired(self):
+        return timezone.now() > self.created_at + timezone.timedelta(minutes=30)

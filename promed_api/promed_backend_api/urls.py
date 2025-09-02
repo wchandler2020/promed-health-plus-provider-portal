@@ -34,7 +34,6 @@ urlpatterns = [
     path('api/v1/', include('notes.urls')),
     path('api/v1/', include('tasks.urls')),
     path('api/v1/patient/', include('patients.urls')),
-    
    # Onboarding Docs
     path('api/v1/onboarding/', include('onboarding_ops.urls')),
 ]

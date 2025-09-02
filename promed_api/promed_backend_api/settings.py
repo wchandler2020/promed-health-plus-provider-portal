@@ -20,8 +20,12 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 DEBUG = True
 
-# ALLOWED_HOSTS = []
-ALLOWED_HOSTS = ['.onrender.com']
+LOCAL_HOST = 'http://localhost:3000'
+
+
+
+ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = ['.onrender.com']
 
 USER_APPS = [
     'provider_auth.apps.ProviderAuthConfig',
@@ -89,24 +93,24 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'promed_backend_api.wsgi.application'
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': os.getenv('DB_NAME'),
-#         'USER': os.getenv('DB_USER'),
-#         'PASSWORD': os.getenv('DB_PASSWORD'),
-#         'HOST': 'localhost',
-#         'PORT': '5432',
-#     }
-# }
-
 DATABASES = {
-    'default': dj_database_url.config(
-        default=os.getenv('NEON_DB_CONN_STRING'),
-        conn_max_age=600,
-        ssl_require=True
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
 }
+
+# DATABASES = {
+#     'default': dj_database_url.config(
+#         default=os.getenv('NEON_DB_CONN_STRING'),
+#         conn_max_age=600,
+#         ssl_require=True
+#     )
+# }
 
 AUTH_PASSWORD_VALIDATORS = [
     {

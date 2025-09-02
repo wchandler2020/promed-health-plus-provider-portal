@@ -1,3 +1,4 @@
+from datetime import datetime
 import random
 import uuid
 
@@ -8,7 +9,7 @@ from rest_framework import generics, status, permissions
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
 from django.core.mail import EmailMultiAlternatives
-from .models import User, Profile
+from .models import User, Profile, PasswordResetToken
 from provider_auth import models as api_models
 from provider_auth import serializers as api_serializers
 from django.template.loader import render_to_string
@@ -19,9 +20,10 @@ from django.core.mail import send_mail
 from dotenv import load_dotenv
 import random
 import os
+from promed_backend_api.settings import LOCAL_HOST, DEFAULT_FROM_EMAIL
 
 load_dotenv()
-# k_phone = os.getenv('KAYVON_PHONE_NUMBER')
+k_phone = os.getenv('KAYVON_PHONE_NUMBER')
 
 # Create your views here.
 class MyTokenObtainPairView(TokenObtainPairView):
@@ -42,7 +44,7 @@ class MyTokenObtainPairView(TokenObtainPairView):
         twilio_secret_key = os.getenv('TWILIO_SECRET_KEY')
         api_models.Verification_Code.objects.create(user=user, code=code, method=method, session_id=session_id)
         # Send code via email or SMS
-        phone_number = '+15022633992'  # Replace with user's phone number
+        phone_number = k_phone  # Replace with user's phone number
         if method == 'sms':
             client = Client(twilio_api_key, twilio_secret_key)
             client.verify.v2.services(settings.TWILIO_VERIFY_SERVICE_SID).verifications.create(
@@ -90,7 +92,7 @@ class VerifyCodeView(generics.CreateAPIView):
         if not valid_code:
             return Response({'verified': False, 'error': 'Invalid code'}, status=status.HTTP_400_BAD_REQUEST)
         # Mark user as verified
-        phone_number = '+15022633992'  # Replace with user's phone
+        phone_number = k_phone  # Replace with user's phone
         client = Client(twilio_api_key, twilio_secret_key)
         verification_check = client.verify.v2.services(settings.TWILIO_VERIFY_SERVICE_SID).verification_checks.create(
         to=phone_number,
@@ -116,7 +118,72 @@ class ProviderProfileView(generics.RetrieveAPIView):
             return Response(serializer.data)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+class RequestPasswordResetView(generics.GenericAPIView):
+    serializer_class = api_serializers.EmptySerializer
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = request.data.get('email')
+        if not email:
+            return Response({'error': 'Email is required'}, status=400)
+        
+        try: 
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            pass
+
+        response_message = {'message': 'If the email is registered, a reset link has been sent.'}
+
+        # Send email password reset if user exists
+        if 'user' in locals():
+            token = PasswordResetToken.objects.create(user=user)
+            reset_link = f"{LOCAL_HOST}/reset-password/{token.token}/"
+
+            html_message = render_to_string('registration/passwordresetemail.html', 
+                                            {'reset_link': reset_link,
+                                             'user': user,
+                                             'year': datetime.now().year})
+            # Send email with reset link
+            send_mail(
+                subject='Password Reset Request',
+                message=f'Click the link to reset your password: {reset_link}',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                html_message=html_message,
+                fail_silently=False,
+            )
+
+        return Response(response_message, status=200)
+
+class ResetPasswordView(generics.GenericAPIView):
+    serializer_class = api_serializers.EmptySerializer
+    permission_classes = [AllowAny]
+
+    def post(self, request, token):
+        try:
+            reset_token = PasswordResetToken.objects.get(token=token)
+        except PasswordResetToken.DoesNotExist:
+            return Response({'error': 'Invalid or expired token.'}, status=400)
+        
+        if reset_token.is_expired():
+            reset_token.delete()
+            return Response({'error': 'Token has expired.'}, status=400)
+        
+        password = request.data.get('password')
+        confirm_password = request.data.get('confirm_password')
+
+        if not password or password != confirm_password:
+            return Response({'error': 'Passwords do not match.'}, status=400)
+
+        user = reset_token.user
+        user.set_password(password)
+        user.save()
+
+        reset_token.delete()
+        
+        return Response({'success': 'Password has been reset successfully.'}, status=200)
+
 # provider_auth/views.py
 
 # ... (other imports and views) ...

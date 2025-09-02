@@ -69,3 +69,5 @@ class VerifyCodeSerializer(serializers.Serializer):
     method = serializers.ChoiceField(choices=['email', 'sms'])
 
 
+class EmptySerializer(serializers.Serializer):
+    pass
