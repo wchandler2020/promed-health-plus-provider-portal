@@ -14,6 +14,8 @@ import FillablePdf from "./components/dashboard/documemts/FillablePdf";
 import Home from "./components/home/Home";
 import Footer from "./components/footer/Footer";
 import ProviderProfileCard from "./components/profile/ProviderProfileCard";
+import ForgotPasswordPage from './components/login/ForgotPasswordPage';
+import ResetPasswordPage from './components/login/ResetPasswordPage';
 
 function ErrorButton() {
   return (
@@ -56,6 +58,8 @@ function AppWrapper() {
             </PrivateRoute>
           }
         />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />}/>
+        <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
         {/* <Route path='/fillable-pdf' element={<PrivateRoute><FillablePdf /></PrivateRoute>} /> */}
         <Route path="/login" element={<Login />} />
         <Route path="/mfa" element={<MFA />} />
